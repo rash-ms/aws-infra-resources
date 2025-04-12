@@ -1,5 +1,5 @@
-devaccount_id               = "124882663954"
+account_id                  = "273354624134"
 region                      = "us-east-1"
-environment                 = "prod"
-consumer_commerce_s3_bucket = "cn-dse-consumer-commerce-eu-prod"
-notification_emails         = ["mujeeb.adeniji@condenast.com", "Sonia_Hinson@condenast.com"]
+environment                 = "dev"
+consumer_commerce_s3_bucket = "byt-infra-test-bucket"
+notification_emails         = ["adenijimujeeb@gamil.com"]
