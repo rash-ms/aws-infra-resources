@@ -58,7 +58,7 @@ resource "aws_cloudwatch_event_permission" "allow_apigateway_to_eventbridge" {
 
 # IAM Role for API Gateway to EventBridge
 resource "aws_iam_role" "chargebee_retention_api_gateway_eventbridge_role_poc" {
-  name                 = "chargebee_retention_api_gateway_eventbridge_role_poc"
+  name = "chargebee_retention_api_gateway_eventbridge_role_poc"
   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
 
 
@@ -112,8 +112,8 @@ resource "aws_apigatewayv2_route" "chargebee_retention_route_poc" {
 
 # IAM Role for EventBridge to Firehose
 resource "aws_iam_role" "chargebee_retention_eventbridge_firehose_role_poc" {
-  name                 = "chargebee_retention_eventbridge_firehose_role_poc"
- # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
+  name = "chargebee_retention_eventbridge_firehose_role_poc"
+  # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
 
 
   assume_role_policy = jsonencode({
@@ -181,8 +181,8 @@ resource "aws_iam_role_policy" "chargebee_retention_eventbridge_firehose_policy_
 
 # IAM Role for EventBridge to write to CloudWatch Logs
 resource "aws_iam_role" "chargebee_retention_eventbridge_to_cloudwatch_role_poc" {
-  name                 = "chargebee_retention_eventbridge_to_cloudwatch_role_poc"
-#  permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
+  name = "chargebee_retention_eventbridge_to_cloudwatch_role_poc"
+  #  permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
 
 
   assume_role_policy = jsonencode({
@@ -244,8 +244,8 @@ resource "aws_cloudwatch_event_target" "chargebee_retention_eventbridge_to_fireh
 
 # EventBridge Target for CloudWatch Logs
 resource "aws_cloudwatch_event_target" "chargebee_retention_eventbridge_to_log_target_poc" {
-  rule           = aws_cloudwatch_event_rule.chargebee_retention_eventbridge_to_firehose_rule_poc.name
-  arn            = aws_cloudwatch_log_group.chargebee_retention_event_bus_logs_poc.arn
+  rule = aws_cloudwatch_event_rule.chargebee_retention_eventbridge_to_firehose_rule_poc.name
+  arn  = aws_cloudwatch_log_group.chargebee_retention_event_bus_logs_poc.arn
   # role_arn       = aws_iam_role.chargebee_retention_eventbridge_to_cloudwatch_role_poc.arn
   event_bus_name = aws_cloudwatch_event_bus.chargebee_retention_event_bus_poc.name
   depends_on     = [aws_cloudwatch_log_group.chargebee_retention_event_bus_logs_poc]
