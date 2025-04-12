@@ -5,3 +5,4 @@ bucket = "byt-infra-resources-tfbackend-dev-273354624134"
 key = "infra-resources-nonprod/us-east-1/apigateway-eventbridge-firehose-s3.tfstate"
 # region stated in data-platform tenant kit, not the region we want to create resources in
 region = "us-east-1"
+
