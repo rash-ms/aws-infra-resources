@@ -58,10 +58,15 @@ resource "null_resource" "gateway_dependencies" {
 # }
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-  depends_on = local.deployment_dependencies
+  depends_on = [
+    null_resource.gateway_dependencies["${var.route_path[0]}"],
+    null_resource.gateway_dependencies["${var.route_path[1]}"],
+    null_resource.gateway_dependencies["${var.route_path[2]}"]
+  ]
 
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
+
 
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage" {
