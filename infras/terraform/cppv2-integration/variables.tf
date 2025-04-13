@@ -13,7 +13,7 @@ variable "environment" {
 
 variable "userplatform_s3_bucket" {
   type    = list(string)
-  default = "dev"
+  description = "List of S3 bucket names for each route (order must match route_path)"
 }
 
 variable "route_path" {

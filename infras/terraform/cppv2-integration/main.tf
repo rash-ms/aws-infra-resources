@@ -24,7 +24,8 @@ resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api" {
 }
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-  depends_on  = [for m in aws_api_gateway_method.userplatform_cpp_api_method : m]
+  depends_on = [for m in aws_api_gateway_method.userplatform_cpp_api_method : m]
+
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
 
