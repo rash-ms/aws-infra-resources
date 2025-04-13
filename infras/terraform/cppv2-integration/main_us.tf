@@ -214,7 +214,7 @@ resource "aws_iam_role" "userplatform_cpp_eventbridge_firehose_role" {
 
 resource "aws_iam_role_policy" "userplatform_cpp_firehose_policy" {
   name = "userplatform-cpp-eventbridge-firehose-access-policy"
-  role = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.id
+  role = aws_iam_role.userplatform_cpp_eventbridge_firehose_role.id
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -234,7 +234,7 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   destination = "extended_s3"
 
   extended_s3_configuration {
-    role_arn            = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
+    role_arn            = aws_iam_role.userplatform_cpp_eventbridge_firehose_role.arn
     bucket_arn          = "arn:aws:s3:::${local.selected_bucket}"
     prefix              = "raw/cppv2-collector/"
     error_output_prefix = "raw/cppv2-errors/"
@@ -291,5 +291,5 @@ resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target
   provider = aws.us
   rule     = aws_cloudwatch_event_rule.userplatform_cpp_cloudwatch_event_rule_us.name
   arn      = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn
-  role_arn = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
+  role_arn = aws_iam_role.userplatform_cpp_eventbridge_firehose_role.arn
 }
