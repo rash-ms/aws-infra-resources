@@ -24,14 +24,14 @@ resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api" {
 }
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-  depends_on  = [for m in aws_api_gateway_method.cpp_method : m]
+  depends_on  = [for m in aws_api_gateway_method.userplatform_cpp_api_method : m]
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage" {
   deployment_id = aws_api_gateway_deployment.userplatform_cpp_api_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
-  stage_name    = "cpp/v02"
+  stage_name    = "cppv02"
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs.arn
     format = jsonencode({
