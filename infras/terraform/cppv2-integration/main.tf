@@ -189,16 +189,37 @@ resource "aws_iam_role_policy" "userplatform_cpp_firehose_policy" {
 # Add JSON newline-delimited configuration to your Firehose stream
 # Modified Firehose delivery streams - firehose per region, others in US
 
+# locals {
+#   route_provider_alias = {
+#     "us-collector"   = aws.us
+#     "emea-collector" = aws.eu
+#     "apac-collector" = aws.ap
+#   }
+# }
+
 locals {
-  route_provider_alias = {
-    "us-collector"   = aws.us
-    "emea-collector" = aws.eu
-    "apac-collector" = aws.ap
+  route_config = {
+    "us-collector" = {
+      region   = "us-east-1"
+      bucket   = "byt-userplatform-us"
+      provider = aws.us
+    }
+    "emea-collector" = {
+      region   = "eu-central-1"
+      bucket   = "byt-userplatform-eu"
+      provider = aws.eu
+    }
+    "apac-collector" = {
+      region   = "ap-northeast-1"
+      bucket   = "byt-userplatform-ap"
+      provider = aws.ap
+    }
   }
 }
 
 resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_delivery_stream" {
-  for_each    = toset(var.route_path)
+  # for_each    = toset(var.route_path)
+  for_each    = local.route_config
   provider    = local.route_provider_alias[each.key]
   name        = "${each.key}-delivery-stream"
   destination = "s3"
