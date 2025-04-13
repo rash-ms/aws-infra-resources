@@ -1,10 +1,10 @@
-provider "aws" {
-  region              = var.region
-  allowed_account_ids = [var.account_id]
-  default_tags {
-    tags = var.tags
-  }
-}
+# provider "aws" {
+#   region              = var.region
+#   allowed_account_ids = [var.account_id]
+#   default_tags {
+#     tags = var.tags
+#   }
+# }
 
 provider "aws" {
   alias               = "us"

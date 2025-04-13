@@ -293,12 +293,3 @@ resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target
   arn      = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn
   role_arn = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
 }
-
-# Output API keys for reference
-output "userplatform_cpp_api_keys" {
-  value = {
-    for k, v in aws_api_gateway_api_key.userplatform_cpp_api_key :
-    k => v.value
-  }
-  sensitive = true
-}
