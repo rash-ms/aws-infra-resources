@@ -1,6 +1,6 @@
 locals {
   bucket_map = zipmap(var.route_path, var.userplatform_s3_bucket)
-  methods = [for k in var.route_path : aws_api_gateway_method.userplatform_cpp_api_method[k]]
+  methods    = [for k in var.route_path : aws_api_gateway_method.userplatform_cpp_api_method[k]]
 
   route_config = {
     "us-collector" = {
@@ -30,7 +30,7 @@ resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api" {
 # }
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-  depends_on = local.methods
+  depends_on  = local.methods
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
 
