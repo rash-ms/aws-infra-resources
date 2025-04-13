@@ -29,8 +29,16 @@ resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api" {
 #   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 # }
 
+resource "null_resource" "gateway_dependencies" {
+  for_each = toset(var.route_path)
+  triggers = {
+    method_id = aws_api_gateway_method.userplatform_cpp_api_method[each.key].id
+  }
+}
+
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-  depends_on  = local.methods
+  depends_on = [for n in null_resource.gateway_dependencies : n]
+
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
 
