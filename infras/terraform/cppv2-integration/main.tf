@@ -1,72 +1,3 @@
-# locals {
-#   routes = {
-#     "dev-us-collector" = {
-#       region = "us-east-1"
-#     }
-#     "dev-eu-collector" = {
-#       region = "eu-central-1"
-#     }
-#     "dev-ap-collector" = {
-#       region = "ap-northeast-1"
-#     }
-#   }
-# }
-
-# # API Gateway
-# resource "aws_api_gateway_rest_api" "cpp_api" {
-#   name = "cpp-api"
-# }
-
-# resource "aws_api_gateway_resource" "collector" {
-#   for_each    = local.routes
-#   rest_api_id = aws_api_gateway_rest_api.cpp_api.id
-#   parent_id   = aws_api_gateway_rest_api.cpp_api.root_resource_id
-#   path_part   = each.key
-# }
-
-# resource "aws_api_gateway_method" "post" {
-#   for_each      = local.routes
-#   rest_api_id   = aws_api_gateway_rest_api.cpp_api.id
-#   resource_id   = aws_api_gateway_resource.collector[each.key].id
-#   http_method   = "POST"
-#   authorization = "NONE"
-# }
-
-# resource "aws_api_gateway_integration" "eventbridge_proxy" {
-#   for_each                = local.routes
-#   rest_api_id             = aws_api_gateway_rest_api.cpp_api.id
-#   resource_id             = aws_api_gateway_resource.collector[each.key].id
-#   http_method             = aws_api_gateway_method.post[each.key].http_method
-#   type                    = "AWS"
-#   integration_http_method = "POST"
-#   uri                     = "arn:aws:apigateway:${var.region}:events:path//"
-#   passthrough_behavior    = "WHEN_NO_MATCH"
-
-#   request_templates = {
-#     "application/json" = <<EOF
-# {
-#   "Entries": [
-#     {
-#       "Source": "cpp.api",
-#       "DetailType": "CPPEvent",
-#       "Detail": "$util.escapeJavaScript($input.body)",
-#       "EventBusName": "default",
-#       "Resources": [],
-#       "Region": "${each.value.region}"
-#     }
-#   ]
-# }
-# EOF
-#   }
-# }
-
-# # Deployment
-# resource "aws_api_gateway_deployment" "deployment" {
-#   depends_on  = [aws_api_gateway_integration.eventbridge_proxy]
-#   rest_api_id = aws_api_gateway_rest_api.cpp_api.id
-# }
-
-
 locals {
   bucket_map = zipmap(var.route_path, var.userplatform_s3_bucket)
   deployment_dependencies = [
@@ -128,15 +59,12 @@ resource "null_resource" "gateway_dependencies" {
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
   depends_on = [
-    null_resource.gateway_dependencies["${var.route_path[0]}"],
-    null_resource.gateway_dependencies["${var.route_path[1]}"],
-    null_resource.gateway_dependencies["${var.route_path[2]}"]
+    for route in var.route_path :
+    null_resource.gateway_dependencies[route]
   ]
 
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
-
-
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage" {
   deployment_id = aws_api_gateway_deployment.userplatform_cpp_api_deployment.id
