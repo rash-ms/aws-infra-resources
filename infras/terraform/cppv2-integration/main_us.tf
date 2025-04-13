@@ -36,16 +36,6 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method" {
 }
 
 # Deployment — depends directly on the methods (no null_resource needed)
-# resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-#   provider = aws.us
-
-#   depends_on = [
-#     for k in keys(local.route_path) : aws_api_gateway_method.userplatform_cpp_api_method[k]
-#   ]
-
-#   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
-# }
-
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
   provider = aws.us
 
@@ -58,28 +48,6 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
 
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
-
-# resource "null_resource" "gateway_dependencies" {
-#   for_each = {
-#     for route in local.route_path : route => route
-#   }
-
-#   provider = aws.us
-#   triggers = {
-#     method_id = aws_api_gateway_method.userplatform_cpp_api_method[each.key].id
-#   }
-# }
-
-# resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-#   provider = aws.us
-#   depends_on = [
-#     null_resource.gateway_dependencies["dev-us-collector"],
-#     null_resource.gateway_dependencies["emea-us-collector"],
-#     null_resource.gateway_dependencies["apac-us-collector"]
-#   ]
-
-#   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
-# }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage" {
   provider      = aws.us
@@ -220,8 +188,69 @@ resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy"
 }
 
 # IAM role for EventBridge to Firehose
-resource "aws_iam_role" "userplatform_cpp_eventbridge_firehose_role" {
-  name = "userplatform_cpp_eventbridge-firehose-role"
+# resource "aws_iam_role" "userplatform_cpp_eventbridge_firehose_role" {
+#   name = "userplatform_cpp_eventbridge-firehose-role"
+
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole",
+#         Effect = "Allow",
+#         Principal = {
+#           Service = "events.amazonaws.com"
+#         }
+#       }
+#     ]
+#   })
+# }
+
+resource "aws_api_gateway_account" "api_account_settings" {
+  provider            = aws.us
+  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch_logging_role.arn
+}
+
+resource "aws_iam_role" "api_gateway_cloudwatch_logging_role" {
+  name = "api-gateway-cloudwatch-logs-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        },
+        Effect = "Allow"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "api_gateway_cloudwatch_logging_policy" {
+  name = "api-gateway-logs-policy"
+  role = aws_iam_role.api_gateway_cloudwatch_logging_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+
+
+resource "aws_iam_role" "userplatform_cpp_firehose_role" {
+  name = "userplatform-cpp-firehose-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -230,12 +259,41 @@ resource "aws_iam_role" "userplatform_cpp_eventbridge_firehose_role" {
         Action = "sts:AssumeRole",
         Effect = "Allow",
         Principal = {
-          Service = "events.amazonaws.com"
+          Service = "firehose.amazonaws.com"
         }
       }
     ]
   })
 }
+
+resource "aws_iam_role_policy" "firehose_s3_policy" {
+  name = "firehose-s3-access"
+  role = aws_iam_role.userplatform_cpp_firehose_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:PutObject",
+          "s3:PutObjectAcl"
+        ],
+        Resource = "arn:aws:s3:::${local.selected_bucket}/*"
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:PutLogEvents",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 
 resource "aws_iam_role_policy" "userplatform_cpp_firehose_policy" {
   name = "userplatform-cpp-eventbridge-firehose-access-policy"
