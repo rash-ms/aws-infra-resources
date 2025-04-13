@@ -9,3 +9,8 @@ userplatform_s3_bucket = {
   ap = "byt-userplatform-dev-ap"
 }
 
+# route_path = {
+#   us = "dev-us-collector"
+#   eu = "dev-emea-collector"
+#   ap = "dev-apac-collector"
+# }
