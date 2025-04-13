@@ -52,12 +52,15 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method" {
 }
 
 resource "null_resource" "gateway_dependencies" {
-  for_each = { for route in var.route_path : route => route }
+  for_each = {
+    for route in var.route_path : route => route
+  }
 
   triggers = {
     method_id = aws_api_gateway_method.userplatform_cpp_api_method[each.key].id
   }
 }
+
 
 
 # resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
@@ -66,10 +69,15 @@ resource "null_resource" "gateway_dependencies" {
 # }
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-  depends_on = local.gateway_depends_on
+  depends_on = [
+    null_resource.gateway_dependencies["us-collector"],
+    null_resource.gateway_dependencies["emea-collector"],
+    null_resource.gateway_dependencies["apac-collector"]
+  ]
 
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
+
 
 
 
