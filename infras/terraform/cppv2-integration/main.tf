@@ -5,6 +5,12 @@ locals {
     null_resource.gateway_dependencies[key]
   ]
 
+  gateway_depends_on = [
+    null_resource.gateway_dependencies["us-collector"],
+    null_resource.gateway_dependencies["emea-collector"],
+    null_resource.gateway_dependencies["apac-collector"]
+  ]
+
   route_config = {
     "us-collector" = {
       region   = "us-east-1"
@@ -60,10 +66,11 @@ resource "null_resource" "gateway_dependencies" {
 # }
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-  depends_on = values(null_resource.gateway_dependencies)
+  depends_on = local.gateway_depends_on
 
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
+
 
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage" {
