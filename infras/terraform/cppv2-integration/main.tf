@@ -1,6 +1,22 @@
 locals {
   bucket_map = zipmap(var.route_path, var.userplatform_s3_bucket)
+
+  route_config = {
+    "us-collector" = {
+      region   = "us-east-1"
+      provider = aws.us
+    }
+    "emea-collector" = {
+      region   = "eu-central-1"
+      provider = aws.eu
+    }
+    "apac-collector" = {
+      region   = "ap-northeast-1"
+      provider = aws.ap
+    }
+  }
 }
+
 
 # REST API Gateway
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api" {
@@ -186,48 +202,16 @@ resource "aws_iam_role_policy" "userplatform_cpp_firehose_policy" {
 }
 
 # Firehose delivery streams + SNS for failure
-# Add JSON newline-delimited configuration to your Firehose stream
-# Modified Firehose delivery streams - firehose per region, others in US
-
-# locals {
-#   route_provider_alias = {
-#     "us-collector"   = aws.us
-#     "emea-collector" = aws.eu
-#     "apac-collector" = aws.ap
-#   }
-# }
-
-locals {
-  route_config = {
-    "us-collector" = {
-      region   = "us-east-1"
-      bucket   = "byt-userplatform-us"
-      provider = aws.us
-    }
-    "emea-collector" = {
-      region   = "eu-central-1"
-      bucket   = "byt-userplatform-eu"
-      provider = aws.eu
-    }
-    "apac-collector" = {
-      region   = "ap-northeast-1"
-      bucket   = "byt-userplatform-ap"
-      provider = aws.ap
-    }
-  }
-}
-
 resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_delivery_stream" {
-  # for_each    = toset(var.route_path)
-  for_each    = local.route_config
-  provider    = local.route_provider_alias[each.key]
+  for_each = local.route_config
+
+  provider    = each.value.provider
   name        = "${each.key}-delivery-stream"
   destination = "s3"
 
   s3_configuration {
-    role_arn   = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
-    bucket_arn = "arn:aws:s3:::${local.bucket_map[each.key]}"
-
+    role_arn           = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
+    bucket_arn         = "arn:aws:s3:::${local.bucket_map[each.key]}"
     prefix             = "raw/cppv2-${each.key}/"
     buffer_size        = 5
     buffer_interval    = 300
@@ -263,11 +247,58 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
     bucket_arn = "arn:aws:s3:::${local.bucket_map[each.key]}"
     prefix     = "raw/cppv2-errors-${each.key}/"
   }
-
-  # tags = {
-  #   Environment = var.environment
-  # }
 }
+
+# resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_delivery_stream" {
+#   for_each    = toset(var.route_path)
+#   provider    = local.route_provider_alias[each.key]
+#   name        = "${each.key}-delivery-stream"
+#   destination = "s3"
+
+#   s3_configuration {
+#     role_arn   = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
+#     bucket_arn = "arn:aws:s3:::${local.bucket_map[each.key]}"
+
+#     prefix             = "raw/cppv2-${each.key}/"
+#     buffer_size        = 5
+#     buffer_interval    = 300
+#     compression_format = "UNCOMPRESSED"
+
+#     cloudwatch_logging_options {
+#       enabled         = true
+#       log_group_name  = "/aws/kinesisfirehose/${each.key}-delivery-stream"
+#       log_stream_name = "S3Delivery"
+#     }
+
+#     data_format_conversion_configuration {
+#       enabled = true
+
+#       input_format_configuration {
+#         deserializer {
+#           json_ser_de {}
+#         }
+#       }
+
+#       output_format_configuration {
+#         serializer {
+#           json_ser_de {
+#             record_delimiter = "\n"
+#           }
+#         }
+#       }
+#     }
+#   }
+
+#   failure_s3_configuration {
+#     role_arn   = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
+#     bucket_arn = "arn:aws:s3:::${local.bucket_map[each.key]}"
+#     prefix     = "raw/cppv2-errors-${each.key}/"
+#   }
+
+#   # tags = {
+#   #   Environment = var.environment
+#   # }
+# }
 
 resource "aws_sns_topic" "userplatform_cpp_firehose_failure" {
   name = "userplatform-cpp-irehose-failure-alert"
