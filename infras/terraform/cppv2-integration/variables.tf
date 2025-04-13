@@ -11,9 +11,13 @@ variable "environment" {
   default = "stg"
 }
 
-variable "martech_s3_bucket" {
-  type    = string
+variable "userplatform_s3_bucket" {
+  type    = list(string)
   default = "dev"
+}
+
+variable "route_path" {
+  type = list(string)
 }
 
 variable "tenant_name" {
