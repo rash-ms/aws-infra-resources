@@ -36,28 +36,28 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method" {
 }
 
 # Deployment — depends directly on the methods (no null_resource needed)
-resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-  provider = aws.us
-
-  depends_on = [
-    for k in keys(local.route_path) : aws_api_gateway_method.userplatform_cpp_api_method[k]
-  ]
-
-  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
-}
-
 # resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
 #   provider = aws.us
 
 #   depends_on = [
-#     aws_api_gateway_method.userplatform_cpp_api_method["us"],
-#     aws_api_gateway_method.userplatform_cpp_api_method["eu"],
-#     aws_api_gateway_method.userplatform_cpp_api_method["ap"]
+#     for k in keys(local.route_path) : aws_api_gateway_method.userplatform_cpp_api_method[k]
 #   ]
-
 
 #   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 # }
+
+resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
+  provider = aws.us
+
+  depends_on = [
+    aws_api_gateway_method.userplatform_cpp_api_method["us"],
+    aws_api_gateway_method.userplatform_cpp_api_method["eu"],
+    aws_api_gateway_method.userplatform_cpp_api_method["ap"]
+  ]
+
+
+  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
+}
 
 # resource "null_resource" "gateway_dependencies" {
 #   for_each = {
