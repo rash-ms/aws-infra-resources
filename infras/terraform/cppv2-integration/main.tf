@@ -1,13 +1,13 @@
 locals {
   routes = {
     "dev-us-collector" = {
-      region = "us"
+      region = "us-east-1"
     }
     "dev-eu-collector" = {
-      region = "eu"
+      region = "eu-central-1"
     }
     "dev-ap-collector" = {
-      region = "ap"
+      region = "ap-northeast-1"
     }
   }
 }
