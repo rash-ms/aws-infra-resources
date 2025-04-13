@@ -16,7 +16,7 @@ resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api" {
 
 # Create resources and methods for each route_path
 resource "aws_api_gateway_resource" "userplatform_cpp_api_resources" {
-  for_each = var.route_path
+  for_each = local.route_path
 
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
@@ -34,53 +34,13 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method" {
   authorization    = "NONE"
   api_key_required = true
 }
-
-provider "aws" {
-  alias  = "us"
-  region = "us-east-1"
-}
-
-locals {
-  route_path      = var.route_path
-  bucket_map      = var.userplatform_s3_bucket
-  selected_bucket = local.bucket_map["us"] # customize if needed
-}
-
-# REST API Gateway
-resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api" {
-  provider = aws.us
-  name     = "userplatform-cpp-rest-api"
-}
-
-# API Resources for each route
-resource "aws_api_gateway_resource" "userplatform_cpp_api_resources" {
-  for_each = var.route_path
-
-  provider    = aws.us
-  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
-  parent_id   = aws_api_gateway_rest_api.userplatform_cpp_rest_api.root_resource_id
-  path_part   = each.value
-}
-
-# API Methods for each resource
-resource "aws_api_gateway_method" "userplatform_cpp_api_method" {
-  for_each = aws_api_gateway_resource.userplatform_cpp_api_resources
-
-  provider         = aws.us
-  rest_api_id      = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
-  resource_id      = each.value.id
-  http_method      = "POST"
-  authorization    = "NONE"
-  api_key_required = true
-}
-
 
 # Deployment — depends directly on the methods (no null_resource needed)
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
   provider = aws.us
 
   depends_on = [
-    for k in keys(var.route_path) : aws_api_gateway_method.userplatform_cpp_api_method[k]
+    for k in keys(local.route_path) : aws_api_gateway_method.userplatform_cpp_api_method[k]
   ]
 
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
@@ -89,7 +49,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
 
 # resource "null_resource" "gateway_dependencies" {
 #   for_each = {
-#     for route in var.route_path : route => route
+#     for route in local.route_path : route => route
 #   }
 
 #   provider = aws.us
@@ -171,7 +131,7 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration" {
 
 # API Keys
 resource "aws_api_gateway_api_key" "userplatform_cpp_api_key" {
-  for_each = var.route_path
+  for_each = local.route_path
 
   provider = aws.us
   name     = "${each.key}-api-key"
@@ -180,7 +140,7 @@ resource "aws_api_gateway_api_key" "userplatform_cpp_api_key" {
 
 # Usage Plans with high rate/burst
 resource "aws_api_gateway_usage_plan" "userplatform_cpp_api_usage_plan" {
-  for_each = var.route_path
+  for_each = local.route_path
 
   provider = aws.us
   name     = "${each.key}-usage-plan"
@@ -197,7 +157,7 @@ resource "aws_api_gateway_usage_plan" "userplatform_cpp_api_usage_plan" {
 }
 
 resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key" {
-  for_each = var.route_path
+  for_each = local.route_path
 
   provider      = aws.us
   key_id        = aws_api_gateway_api_key.userplatform_cpp_api_key[each.key].id
