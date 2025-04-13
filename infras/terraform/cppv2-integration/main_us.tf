@@ -270,7 +270,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm_
   threshold           = 1
   alarm_description   = "Alert when Firehose fails to deliver data to S3"
   dimensions = {
-    DeliveryStreamName = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us[each.key].name
+    DeliveryStreamName = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.name
   }
   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_us.arn]
 }
