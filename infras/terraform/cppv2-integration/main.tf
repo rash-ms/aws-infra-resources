@@ -1,15 +1,5 @@
 locals {
   bucket_map = zipmap(var.route_path, var.userplatform_s3_bucket)
-  deployment_dependencies = [
-    for key in toset(var.route_path) :
-    null_resource.gateway_dependencies[key]
-  ]
-
-  gateway_depends_on = [
-    null_resource.gateway_dependencies["us-collector"],
-    null_resource.gateway_dependencies["emea-collector"],
-    null_resource.gateway_dependencies["apac-collector"]
-  ]
 
   route_config = {
     "us-collector" = {
@@ -61,13 +51,6 @@ resource "null_resource" "gateway_dependencies" {
   }
 }
 
-
-
-# resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-#   depends_on  = values(aws_api_gateway_method.userplatform_cpp_api_method)
-#   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
-# }
-
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
   depends_on = [
     null_resource.gateway_dependencies["us-collector"],
@@ -103,15 +86,6 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage" {
   xray_tracing_enabled = true
 }
 
-resource "aws_cloudwatch_log_group" "userplatform_cpp_api_gateway_logs" {
-  name              = "/aws/apigateway/userplatform-cpp-rest-api"
-  retention_in_days = 14
-}
-
-resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus" {
-  name = "userplatform_cpp_event_bus"
-}
-
 resource "aws_api_gateway_integration" "userplatform_cpp_api_integration" {
   for_each = aws_api_gateway_resource.userplatform_cpp_api_resources
 
@@ -136,37 +110,6 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration" {
   }
   EOF
   }
-}
-
-resource "aws_iam_role" "userplatform_cpp_api_gateway_eventbridge_role" {
-  name = "api-gateway-eventbridge-role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Service = "apigateway.amazonaws.com"
-        },
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy" {
-  name = "api-gateway-eventbridge-policy"
-  role = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_role.id
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect   = "Allow",
-        Action   = ["events:PutEvents"],
-        Resource = "*"
-      }
-    ]
-  })
 }
 
 # API Keys
@@ -202,97 +145,91 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key" 
   usage_plan_id = aws_api_gateway_usage_plan.userplatform_cpp_api_usage_plan[each.key].id
 }
 
-# IAM role for EventBridge to Firehose
-resource "aws_iam_role" "userplatform_cpp_eventbridge_firehose_role" {
-  name = "userplatform_cpp_eventbridge-firehose-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = "sts:AssumeRole",
-        Effect = "Allow",
-        Principal = {
-          Service = "events.amazonaws.com"
-        }
-      }
-    ]
-  })
+resource "aws_cloudwatch_log_group" "userplatform_cpp_api_gateway_logs" {
+  name              = "/aws/apigateway/userplatform-cpp-rest-api"
+  retention_in_days = 14
 }
 
-resource "aws_iam_role_policy" "userplatform_cpp_firehose_policy" {
-  name = "userplatform-cpp-eventbridge-firehose-access-policy"
-  role = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.id
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect   = "Allow",
-        Action   = ["firehose:PutRecord", "firehose:PutRecordBatch"],
-        Resource = "*"
-      }
-    ]
-  })
-}
+# resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus" {
+#   name = "userplatform_cpp_event_bus"
+# }
 
-# Firehose delivery streams + SNS for failure
-resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_delivery_stream" {
-  for_each = local.route_config
+# resource "aws_iam_role" "userplatform_cpp_api_gateway_eventbridge_role" {
+#   name = "api-gateway-eventbridge-role"
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Principal = {
+#           Service = "apigateway.amazonaws.com"
+#         },
+#         Action = "sts:AssumeRole"
+#       }
+#     ]
+#   })
+# }
 
-  provider    = each.value.provider
-  name        = "${each.key}-delivery-stream"
-  destination = "s3"
+# resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy" {
+#   name = "api-gateway-eventbridge-policy"
+#   role = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_role.id
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect   = "Allow",
+#         Action   = ["events:PutEvents"],
+#         Resource = "*"
+#       }
+#     ]
+#   })
+# }
 
-  s3_configuration {
-    role_arn           = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
-    bucket_arn         = "arn:aws:s3:::${local.bucket_map[each.key]}"
-    prefix             = "raw/cppv2-${each.key}/"
-    buffer_size        = 5
-    buffer_interval    = 300
-    compression_format = "UNCOMPRESSED"
 
-    cloudwatch_logging_options {
-      enabled         = true
-      log_group_name  = "/aws/kinesisfirehose/${each.key}-delivery-stream"
-      log_stream_name = "S3Delivery"
-    }
+# # IAM role for EventBridge to Firehose
+# resource "aws_iam_role" "userplatform_cpp_eventbridge_firehose_role" {
+#   name = "userplatform_cpp_eventbridge-firehose-role"
 
-    data_format_conversion_configuration {
-      enabled = true
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole",
+#         Effect = "Allow",
+#         Principal = {
+#           Service = "events.amazonaws.com"
+#         }
+#       }
+#     ]
+#   })
+# }
 
-      input_format_configuration {
-        deserializer {
-          json_ser_de {}
-        }
-      }
+# resource "aws_iam_role_policy" "userplatform_cpp_firehose_policy" {
+#   name = "userplatform-cpp-eventbridge-firehose-access-policy"
+#   role = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.id
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect   = "Allow",
+#         Action   = ["firehose:PutRecord", "firehose:PutRecordBatch"],
+#         Resource = "*"
+#       }
+#     ]
+#   })
+# }
 
-      output_format_configuration {
-        serializer {
-          json_ser_de {
-            record_delimiter = "\n"
-          }
-        }
-      }
-    }
-  }
-
-  failure_s3_configuration {
-    role_arn   = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
-    bucket_arn = "arn:aws:s3:::${local.bucket_map[each.key]}"
-    prefix     = "raw/cppv2-errors-${each.key}/"
-  }
-}
-
+# # Firehose delivery streams + SNS for failure
 # resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_delivery_stream" {
-#   for_each    = toset(var.route_path)
-#   provider    = local.route_provider_alias[each.key]
+#   for_each = local.route_config
+
+#   provider    = each.value.provider
 #   name        = "${each.key}-delivery-stream"
 #   destination = "s3"
 
 #   s3_configuration {
-#     role_arn   = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
-#     bucket_arn = "arn:aws:s3:::${local.bucket_map[each.key]}"
-
+#     role_arn           = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
+#     bucket_arn         = "arn:aws:s3:::${local.bucket_map[each.key]}"
 #     prefix             = "raw/cppv2-${each.key}/"
 #     buffer_size        = 5
 #     buffer_interval    = 300
@@ -328,61 +265,57 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
 #     bucket_arn = "arn:aws:s3:::${local.bucket_map[each.key]}"
 #     prefix     = "raw/cppv2-errors-${each.key}/"
 #   }
-
-#   # tags = {
-#   #   Environment = var.environment
-#   # }
 # }
 
-resource "aws_sns_topic" "userplatform_cpp_firehose_failure" {
-  name = "userplatform-cpp-irehose-failure-alert"
-}
+# resource "aws_sns_topic" "userplatform_cpp_firehose_failure" {
+#   name = "userplatform-cpp-irehose-failure-alert"
+# }
 
-# CloudWatch alarm for Firehose failure delivery
-resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm" {
-  for_each = toset(var.route_path)
+# # CloudWatch alarm for Firehose failure delivery
+# resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm" {
+#   for_each = toset(var.route_path)
 
-  alarm_name          = "${each.key}-FirehoseDeliveryFailures"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = 1
-  metric_name         = "DeliveryToS3.Failure"
-  namespace           = "AWS/Firehose"
-  period              = 60
-  statistic           = "Sum"
-  threshold           = 1
-  alarm_description   = "Alert when Firehose fails to deliver data to S3"
-  dimensions = {
-    DeliveryStreamName = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream[each.key].name
-  }
-  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure.arn]
-}
+#   alarm_name          = "${each.key}-FirehoseDeliveryFailures"
+#   comparison_operator = "GreaterThanThreshold"
+#   evaluation_periods  = 1
+#   metric_name         = "DeliveryToS3.Failure"
+#   namespace           = "AWS/Firehose"
+#   period              = 60
+#   statistic           = "Sum"
+#   threshold           = 1
+#   alarm_description   = "Alert when Firehose fails to deliver data to S3"
+#   dimensions = {
+#     DeliveryStreamName = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream[each.key].name
+#   }
+#   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure.arn]
+# }
 
-# EventBridge rules per route_path
-resource "aws_cloudwatch_event_rule" "userplatform_cpp_cloudwatch_event_rule" {
-  for_each = toset(var.route_path)
+# # EventBridge rules per route_path
+# resource "aws_cloudwatch_event_rule" "userplatform_cpp_cloudwatch_event_rule" {
+#   for_each = toset(var.route_path)
 
-  name = "${each.key}-rule"
-  event_pattern = jsonencode({
-    source = ["custom.api"],
-    detail = {
-      route_path = [each.key]
-    }
-  })
-}
+#   name = "${each.key}-rule"
+#   event_pattern = jsonencode({
+#     source = ["custom.api"],
+#     detail = {
+#       route_path = [each.key]
+#     }
+#   })
+# }
 
-resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target" {
-  for_each = toset(var.route_path)
+# resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target" {
+#   for_each = toset(var.route_path)
 
-  rule     = aws_cloudwatch_event_rule.userplatform_cpp_cloudwatch_event_rule[each.key].name
-  arn      = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream[each.key].arn
-  role_arn = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
-}
+#   rule     = aws_cloudwatch_event_rule.userplatform_cpp_cloudwatch_event_rule[each.key].name
+#   arn      = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream[each.key].arn
+#   role_arn = aws_iam_role.userplatform_cpp_eventbridge_to_firehose_role.arn
+# }
 
-# Output API keys for reference
-output "userplatform_cpp_api_keys" {
-  value = {
-    for k, v in aws_api_gateway_api_key.userplatform_cpp_api_key :
-    k => v.value
-  }
-  sensitive = true
-}
+# # Output API keys for reference
+# output "userplatform_cpp_api_keys" {
+#   value = {
+#     for k, v in aws_api_gateway_api_key.userplatform_cpp_api_key :
+#     k => v.value
+#   }
+#   sensitive = true
+# }
