@@ -15,9 +15,8 @@ variable "userplatform_s3_bucket" {
   type = map(string)
 }
 
-
 variable "route_path" {
-  type = list(string)
+  type = map(string)
 }
 
 variable "tenant_name" {
