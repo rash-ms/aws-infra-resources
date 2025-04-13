@@ -8,7 +8,7 @@ variable "account_id" {
 
 variable "environment" {
   type    = string
-  default = "stg"
+  default = "dev"
 }
 
 variable "userplatform_s3_bucket" {
