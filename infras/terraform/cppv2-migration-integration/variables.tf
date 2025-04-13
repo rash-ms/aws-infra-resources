@@ -11,21 +11,12 @@ variable "environment" {
   default = "dev"
 }
 
-# variable "userplatform_s3_bucket" {
-#   type        = list(string)
-#   description = "List of S3 bucket names for each route (order must match route_path)"
-# }
-
 variable "userplatform_s3_bucket" {
   type = map(string)
 }
 
 
 variable "route_path" {
-  type = list(string)
-}
-
-variable "deployer_region" {
   type = list(string)
 }
 

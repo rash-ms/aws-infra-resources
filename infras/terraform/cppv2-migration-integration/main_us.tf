@@ -7,7 +7,6 @@ locals {
   selected_bucket = local.bucket_map["us"]
 }
 
-
 # REST API Gateway
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api" {
   provider = aws.us
@@ -194,7 +193,6 @@ resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy"
     ]
   })
 }
-
 
 # IAM role for EventBridge to Firehose
 resource "aws_iam_role" "userplatform_cpp_eventbridge_firehose_role" {
