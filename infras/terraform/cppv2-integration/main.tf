@@ -1,6 +1,9 @@
 locals {
   bucket_map = zipmap(var.route_path, var.userplatform_s3_bucket)
-  methods    = [for k in var.route_path : aws_api_gateway_method.userplatform_cpp_api_method[k]]
+  deployment_dependencies = [
+    for key in toset(var.route_path) :
+    null_resource.gateway_dependencies[key]
+  ]
 
   route_config = {
     "us-collector" = {
@@ -18,16 +21,29 @@ locals {
   }
 }
 
-
 # REST API Gateway
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api" {
   name = "userplatform-cpp-rest-api"
 }
 
-# resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-#   depends_on  = values(aws_api_gateway_method.userplatform_cpp_api_method)
-#   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
-# }
+# Create resources and methods for each route_path
+resource "aws_api_gateway_resource" "userplatform_cpp_api_resources" {
+  for_each = toset(var.route_path)
+
+  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
+  parent_id   = aws_api_gateway_rest_api.userplatform_cpp_rest_api.root_resource_id
+  path_part   = each.key
+}
+
+resource "aws_api_gateway_method" "userplatform_cpp_api_method" {
+  for_each = aws_api_gateway_resource.userplatform_cpp_api_resources
+
+  rest_api_id      = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
+  resource_id      = each.value.id
+  http_method      = "POST"
+  authorization    = "NONE"
+  api_key_required = true
+}
 
 resource "null_resource" "gateway_dependencies" {
   for_each = toset(var.route_path)
@@ -36,11 +52,17 @@ resource "null_resource" "gateway_dependencies" {
   }
 }
 
+# resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
+#   depends_on  = values(aws_api_gateway_method.userplatform_cpp_api_method)
+#   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
+# }
+
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-  depends_on = values(null_resource.gateway_dependencies)
+  depends_on = local.deployment_dependencies
 
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
+
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage" {
   deployment_id = aws_api_gateway_deployment.userplatform_cpp_api_deployment.id
@@ -67,25 +89,6 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage" {
 resource "aws_cloudwatch_log_group" "userplatform_cpp_api_gateway_logs" {
   name              = "/aws/apigateway/userplatform-cpp-rest-api"
   retention_in_days = 14
-}
-
-# Create resources and methods for each route_path
-resource "aws_api_gateway_resource" "userplatform_cpp_api_resources" {
-  for_each = toset(var.route_path)
-
-  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
-  parent_id   = aws_api_gateway_rest_api.userplatform_cpp_rest_api.root_resource_id
-  path_part   = each.key
-}
-
-resource "aws_api_gateway_method" "userplatform_cpp_api_method" {
-  for_each = aws_api_gateway_resource.userplatform_cpp_api_resources
-
-  rest_api_id      = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
-  resource_id      = each.value.id
-  http_method      = "POST"
-  authorization    = "NONE"
-  api_key_required = true
 }
 
 resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus" {
