@@ -46,6 +46,18 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
 
+# resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
+#   provider = aws.us
+
+#   depends_on = [
+#     aws_api_gateway_method.userplatform_cpp_api_method["us"],
+#     aws_api_gateway_method.userplatform_cpp_api_method["eu"],
+#     aws_api_gateway_method.userplatform_cpp_api_method["ap"]
+#   ]
+
+
+#   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
+# }
 
 # resource "null_resource" "gateway_dependencies" {
 #   for_each = {
