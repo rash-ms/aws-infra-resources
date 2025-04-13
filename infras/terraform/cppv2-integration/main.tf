@@ -37,7 +37,7 @@ resource "null_resource" "gateway_dependencies" {
 }
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-  depends_on = [for n in null_resource.gateway_dependencies : n]
+  depends_on = values(null_resource.gateway_dependencies)
 
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
