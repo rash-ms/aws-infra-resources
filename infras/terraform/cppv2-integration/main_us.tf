@@ -137,6 +137,42 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration" {
   }
 }
 
+resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response" {
+  for_each = local.route_path
+
+  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
+  resource_id = aws_api_gateway_resource.userplatform_cpp_api_resources[each.key].id
+  http_method = aws_api_gateway_method.userplatform_cpp_api_method[each.key].http_method
+  status_code = "200"
+
+  depends_on = [
+    aws_api_gateway_integration.userplatform_cpp_api_integration
+  ]
+
+  response_parameters = {
+    "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
+    "method.response.header.etag"             = "integration.response.header.ETag"
+  }
+}
+
+resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_method_response" {
+  for_each = local.route_path
+
+  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
+  resource_id = aws_api_gateway_resource.userplatform_cpp_api_resources[each.key].id
+  http_method = aws_api_gateway_method.userplatform_cpp_api_method[each.key].http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.x-amz-request-id" = true,
+    "method.response.header.etag"             = true
+  }
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
 # API Keys
 resource "aws_api_gateway_api_key" "userplatform_cpp_api_key" {
   for_each = local.route_path
@@ -185,19 +221,38 @@ resource "aws_cloudwatch_log_group" "userplatform_cpp_event_bus_logs" {
   retention_in_days = 14
 }
 
-# Deployment — depends directly on the methods (no null_resource needed)
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-  provider = aws.us
+  provider    = aws.us
+  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 
   depends_on = [
     aws_api_gateway_method.userplatform_cpp_api_method["us"],
     aws_api_gateway_method.userplatform_cpp_api_method["eu"],
-    aws_api_gateway_method.userplatform_cpp_api_method["ap"]
+    aws_api_gateway_method.userplatform_cpp_api_method["ap"],
+
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response["us"],
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response["eu"],
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response["ap"],
+
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response["us"],
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response["eu"],
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response["ap"]
   ]
-
-
-  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 }
+
+
+# resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
+#   provider = aws.us
+#
+#   depends_on = [
+#     aws_api_gateway_method.userplatform_cpp_api_method["us"],
+#     aws_api_gateway_method.userplatform_cpp_api_method["eu"],
+#     aws_api_gateway_method.userplatform_cpp_api_method["ap"]
+#   ]
+#
+#
+#   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
+# }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage" {
   provider      = aws.us
