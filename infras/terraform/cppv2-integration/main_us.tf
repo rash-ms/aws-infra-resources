@@ -137,8 +137,26 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration" {
   }
 }
 
+# resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response" {
+#   for_each = local.route_path
+#
+#   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
+#   resource_id = aws_api_gateway_resource.userplatform_cpp_api_resources[each.key].id
+#   http_method = aws_api_gateway_method.userplatform_cpp_api_method[each.key].http_method
+#   status_code = "200"
+#
+#   depends_on = [
+#     aws_api_gateway_integration.userplatform_cpp_api_integration
+#   ]
+#
+#   response_parameters = {
+#     "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
+#     "method.response.header.etag"             = "integration.response.header.ETag"
+#   }
+# }
+
 resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response" {
-  for_each = local.route_path
+  for_each    = local.route_path
 
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
   resource_id = aws_api_gateway_resource.userplatform_cpp_api_resources[each.key].id
@@ -146,7 +164,7 @@ resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_
   status_code = "200"
 
   depends_on = [
-    aws_api_gateway_integration.userplatform_cpp_api_integration
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response[each.key]
   ]
 
   response_parameters = {
@@ -154,6 +172,7 @@ resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_
     "method.response.header.etag"             = "integration.response.header.ETag"
   }
 }
+
 
 resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_method_response" {
   for_each = local.route_path
