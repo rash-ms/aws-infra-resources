@@ -410,9 +410,9 @@ resource "aws_iam_role_policy_attachment" "userplatform_cpp_chatbot_attach_us" {
 
 # 3. AWS Chatbot Slack Configuration
 resource "aws_chatbot_slack_channel_configuration" "userplatform_cpp_firehose_alerts_to_slack_us" {
-  name               = "userplatform_cpp_firehose_alerts_to_slack_us"
+  configuration_name = "userplatform_cpp_firehose_alerts_to_slack_us"
   slack_channel_id   = var.slack_channel_id
-  slack_workspace_id = var.slack_workspace_id
+  slack_team_id      = var.slack_workspace_id
 
   sns_topic_arns = [aws_sns_topic.userplatform_cpp_firehose_failure_us.arn]
   iam_role_arn   = aws_iam_role.userplatform_cpp_chatbot_role_us.arn
