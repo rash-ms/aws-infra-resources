@@ -381,8 +381,14 @@ resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_r
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
 
   event_pattern = jsonencode({
-    detail = {
-      market = ["US"]
+    "detail" = {
+      "body" = {
+        "payload" = {
+          "fullDocument_payload" = {
+            "market" = ["US"]
+          }
+        }
+      }
     }
   })
 }
