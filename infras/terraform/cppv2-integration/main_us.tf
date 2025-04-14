@@ -39,23 +39,41 @@ resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy"
 }
 
 # NOTE NOTE NOTE NOTE ****************
-# resource "aws_iam_role" "userplatform_cpp_api_gateway_cloudwatch_logging_role" {
-#   name = "userplatform_cpp_api_gateway_cloudwatch_logging_role"
-#   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
-#
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Action = "sts:AssumeRole",
-#         Principal = {
-#           Service = "apigateway.amazonaws.com"
-#         },
-#         Effect = "Allow"
-#       }
-#     ]
-#   })
-# }
+resource "aws_iam_role" "userplatform_cpp_api_gateway_cloudwatch_logging_role" {
+  name = "userplatform_cpp_api_gateway_cloudwatch_logging_role"
+  # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        },
+        Effect = "Allow"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_cloudwatch_logging_policy" {
+  name = "userplatform_cpp_api_gateway_cloudwatch_logging_policy"
+  role = aws_iam_role.userplatform_cpp_api_gateway_cloudwatch_logging_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Action = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      Resource = "*"
+    }]
+  })
+}
 
 # REST API Gateway
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api" {
@@ -232,7 +250,7 @@ resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_s
 
 resource "aws_api_gateway_account" "userplatform_cpp_api_account_settings" {
   provider            = aws.us
-  cloudwatch_role_arn = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_role.arn
+  cloudwatch_role_arn = aws_iam_role.userplatform_cpp_api_gateway_cloudwatch_logging_role.arn
 }
 
 resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_us" {
@@ -330,6 +348,7 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
     processing_configuration {
       enabled = false
     }
+
   }
 }
 
@@ -352,9 +371,9 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm_
 }
 
 # EventBridge rules per route_path
-resource "aws_cloudwatch_event_rule" "chargebee_retention_eventbridge_to_firehose_rule_us" {
+resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_rule_us" {
   provider = aws.us
-  name     = "chargebee_retention_eventbridge_to_firehose_rule_us"
+  name     = "userplatform_cpp_eventbridge_to_firehose_rule_us"
 
   event_pattern = jsonencode({
     detail = {
@@ -365,7 +384,7 @@ resource "aws_cloudwatch_event_rule" "chargebee_retention_eventbridge_to_firehos
 
 resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_us" {
   provider       = aws.us
-  rule           = aws_cloudwatch_event_rule.chargebee_retention_eventbridge_to_firehose_rule_us.name
+  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
   arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn
   role_arn       = aws_iam_role.userplatform_cpp_eventbridge_firehose_role.arn
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
@@ -373,7 +392,7 @@ resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target
 
 resource "aws_cloudwatch_event_target" "chargebee_retention_eventbridge_to_log_target" {
   provider       = aws.us
-  rule           = aws_cloudwatch_event_rule.chargebee_retention_eventbridge_to_firehose_rule_us.name
+  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
   arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs.arn
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
   depends_on     = [aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs]
@@ -383,7 +402,7 @@ resource "aws_cloudwatch_event_target" "chargebee_retention_eventbridge_to_log_t
 # 1. SNS Topic for alerts
 resource "aws_sns_topic" "userplatform_cpp_firehose_failure_us" {
   provider = aws.us
-  name     = "userplatform-cpp-irehose-failure-alert-us"
+  name     = "userplatform-cpp-firehose-failure-alert-us"
 }
 
 # 2. IAM Role for AWS Chatbot
