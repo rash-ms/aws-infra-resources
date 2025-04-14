@@ -164,7 +164,9 @@ resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_
   status_code = "200"
 
   depends_on = [
-    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response[each.key]
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response["us"],
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response["eu"],
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response["ap"]
   ]
 
   response_parameters = {
