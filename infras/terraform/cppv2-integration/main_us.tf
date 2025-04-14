@@ -221,21 +221,25 @@ resource "aws_cloudwatch_log_group" "userplatform_cpp_event_bus_logs" {
   retention_in_days = 14
 }
 
-locals {
-  deployment_dependencies = flatten([
-    [for k in keys(local.route_path) : aws_api_gateway_method.userplatform_cpp_api_method[k]],
-    [for k in keys(local.route_path) : aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response[k]],
-    [for k in keys(local.route_path) : aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response[k]]
-  ])
-}
-
-# Deployment — depends directly on the methods (no null_resource needed)
-resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
+resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
 
-  depends_on = local.deployment_dependencies
+  depends_on = [
+    aws_api_gateway_method.userplatform_cpp_api_method["us"],
+    aws_api_gateway_method.userplatform_cpp_api_method["eu"],
+    aws_api_gateway_method.userplatform_cpp_api_method["ap"],
+
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response["us"],
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response["eu"],
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response["ap"],
+
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response["us"],
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response["eu"],
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response["ap"]
+  ]
 }
+
 
 # resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
 #   provider = aws.us
