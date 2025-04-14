@@ -5,7 +5,7 @@ locals {
 }
 
 resource "aws_iam_role" "userplatform_cpp_api_gateway_eventbridge_role" {
-  name                 = "userplatform_cpp_api_gateway_eventbridge_role"
+  name = "userplatform_cpp_api_gateway_eventbridge_role"
   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
 
   assume_role_policy = jsonencode({
