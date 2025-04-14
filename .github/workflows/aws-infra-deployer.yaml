@@ -8,7 +8,7 @@ on:
 jobs:
   infra-resources-nonprod:
     uses: rash-ms/planet-workflow/.github/workflows/terraform.yml@1.0.0
-    # uses: rash-ms/planet-workflow/.github/workflows/lit-terraform.yml@1.2.1
+    # uses: rash-ms/planet-workflow/.github/workflows/lit-terraform.yml@1.0.1
     permissions:
       id-token: write  
       contents: read   
