@@ -333,11 +333,6 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   }
 }
 
-resource "aws_sns_topic" "userplatform_cpp_firehose_failure_us" {
-  provider = aws.us
-  name     = "userplatform-cpp-irehose-failure-alert-us"
-}
-
 # CloudWatch alarm for Firehose failure delivery
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm_us" {
   provider            = aws.us
