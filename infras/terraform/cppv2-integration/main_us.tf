@@ -348,11 +348,6 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
     processing_configuration {
       enabled = false
     }
-    data_writer_configuration {
-      file_writer_config {
-        new_line_delimiter = true
-      }
-    }
 
   }
 }
