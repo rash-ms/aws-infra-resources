@@ -39,3 +39,11 @@ variable "tags" {
     "owner"       = "data-platform"
   }
 }
+
+variable "slack_channel_id" {
+  type = string
+}
+
+variable "slack_workspace_id" {
+  type = string
+}
