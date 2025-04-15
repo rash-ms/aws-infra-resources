@@ -4,12 +4,12 @@ locals {
   selected_bucket_eu = local.bucket_map["eu"]
 }
 
-
-resource "aws_cloudwatch_log_group" "userplatform_cpp_event_bus_logs" {
-  provider          = aws.eu
-  name              = "/aws/events/userplatform_cpp_event_bus_logs"
-  retention_in_days = 14
-}
+#
+# resource "aws_cloudwatch_log_group" "userplatform_cpp_event_bus_logs" {
+#   provider          = aws.eu
+#   name              = "/aws/events/userplatform_cpp_event_bus_logs"
+#   retention_in_days = 14
+# }
 
 resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_eu" {
   provider = aws.eu
