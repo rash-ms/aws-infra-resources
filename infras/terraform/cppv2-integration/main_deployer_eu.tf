@@ -54,7 +54,7 @@ resource "aws_iam_role_policy" "userplatform_cpp_eventbridge_firehose_policy_eu"
         "firehose:PutRecordBatch"
       ],
       Effect   = "Allow",
-      Resource = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn
+      Resource = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn
       },
       {
         Action = [
@@ -171,7 +171,7 @@ resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_r
 resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_eu" {
   provider       = aws.eu
   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
-  arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn
+  arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn
   role_arn       = aws_iam_role.userplatform_cpp_eventbridge_firehose_role_eu.arn
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.name
 }
@@ -215,7 +215,7 @@ resource "aws_sns_topic" "userplatform_cpp_firehose_failure_eu" {
 
 # 3. AWS Chatbot Slack Configuration
 resource "aws_chatbot_slack_channel_configuration" "userplatform_cpp_firehose_alerts_to_slack_eu" {
-  configuration_name = "userplatform_cpp_firehose_alerts_to_slack_us"
+  configuration_name = "userplatform_cpp_firehose_alerts_to_slack_eu"
   slack_channel_id   = var.slack_channel_id
   slack_team_id      = var.slack_workspace_id
 
