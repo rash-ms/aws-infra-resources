@@ -14,4 +14,3 @@ route_path = {
   eu = "dev-emea-collector"
   ap = "dev-apac-collector"
 }
-# route_path          = ["dev-us-collector", "dev-emea-collector", "dev-apac-collector"]
