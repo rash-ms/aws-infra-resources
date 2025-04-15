@@ -1,6 +1,6 @@
 locals {
-  route_path      = var.route_path
-  bucket_map      = var.userplatform_s3_bucket
+  # route_path      = var.route_path
+  # bucket_map      = var.userplatform_s3_bucket
   selected_bucket = local.bucket_map["eu"]
 }
 
