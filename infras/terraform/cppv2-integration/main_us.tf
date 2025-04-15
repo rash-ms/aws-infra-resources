@@ -589,9 +589,14 @@ resource "aws_chatbot_slack_channel_configuration" "userplatform_cpp_firehose_al
   slack_channel_id   = var.slack_channel_id
   slack_team_id      = var.slack_workspace_id
 
-  sns_topic_arns = [aws_sns_topic.userplatform_cpp_firehose_failure_us.arn]
-  iam_role_arn   = aws_iam_role.userplatform_cpp_chatbot_role_us.arn
-  logging_level  = "ERROR"
+  # sns_topic_arns = [aws_sns_topic.userplatform_cpp_firehose_failure_us.arn]
+  sns_topic_arns = [
+    aws_sns_topic.userplatform_cpp_firehose_failure_us.arn,
+    aws_sns_topic.userplatform_cpp_firehose_failure_eu.arn,
+  ]
+
+  iam_role_arn  = aws_iam_role.userplatform_cpp_chatbot_role_us.arn
+  logging_level = "ERROR"
 }
 
 
