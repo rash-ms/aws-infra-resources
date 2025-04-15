@@ -27,7 +27,7 @@ jobs:
   infra-resources-prod:
     needs: infra-resources-nonprod
     uses: rash-ms/planet-workflow/.github/workflows/terraform.yml@1.0.0
-    # uses: rash-ms/planet-workflow/.github/workflows/lit-terraform.yml@1.0.2
+    # uses: rash-ms/planet-workflow/.github/workflows/lit-terraform.yml@1.1.2
     permissions:
       id-token: write  
       contents: read   
