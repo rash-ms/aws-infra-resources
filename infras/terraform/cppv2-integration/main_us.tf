@@ -22,21 +22,41 @@ resource "aws_iam_role" "userplatform_cpp_api_gateway_eventbridge_role" {
   })
 }
 
+# resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy" {
+#   name = "userplatform_cpp_api_gateway_eventbridge_policy"
+#   role = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_role.id
+#
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect   = "Allow",
+#         Action   = ["events:PutEvents"],
+#         Resource = "*"
+#       }
+#     ]
+#   })
+# }
+
 resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy" {
   name = "userplatform_cpp_api_gateway_eventbridge_policy"
   role = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_role.id
 
   policy = jsonencode({
     Version = "2012-10-17",
-    Statement = [
-      {
-        Effect   = "Allow",
-        Action   = ["events:PutEvents"],
-        Resource = "*"
-      }
-    ]
+    Statement = [{
+      Action = [
+        "events:PutEvents"
+      ],
+      Effect = "Allow",
+      Resource = [
+        "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn}",
+        "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn}"
+      ]
+    }]
   })
 }
+
 
 # NOTE NOTE NOTE NOTE ****************
 resource "aws_iam_role" "userplatform_cpp_api_gateway_cloudwatch_logging_role" {
@@ -521,7 +541,7 @@ resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
 }
 
-resource "aws_cloudwatch_event_target" "chargebee_retention_eventbridge_to_log_target" {
+resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target" {
   provider       = aws.us
   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
   arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs.arn

@@ -5,11 +5,11 @@ locals {
 }
 
 
-# resource "aws_cloudwatch_log_group" "userplatform_cpp_event_bus_logs" {
-#   provider          = aws.us
-#   name              = "/aws/events/userplatform_cpp_event_bus_logs"
-#   retention_in_days = 14
-# }
+resource "aws_cloudwatch_log_group" "userplatform_cpp_event_bus_logs" {
+  provider          = aws.eu
+  name              = "/aws/events/userplatform_cpp_event_bus_logs"
+  retention_in_days = 14
+}
 
 resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_eu" {
   provider = aws.eu
@@ -176,7 +176,7 @@ resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.name
 }
 
-resource "aws_cloudwatch_event_target" "chargebee_retention_eventbridge_to_log_target_eu" {
+resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target_eu" {
   provider       = aws.eu
   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_eu.name
   arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs.arn
