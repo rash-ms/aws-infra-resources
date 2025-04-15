@@ -1,7 +1,7 @@
 locals {
   # route_path      = var.route_path
   # bucket_map      = var.userplatform_s3_bucket
-  selected_bucket = local.bucket_map["eu"]
+  selected_bucket_eu = local.bucket_map["eu"]
 }
 
 
@@ -17,73 +17,73 @@ resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_eu" {
 }
 
 
-# resource "aws_iam_role" "userplatform_cpp_eventbridge_firehose_role" {
-#   name = "userplatform_cpp_eventbridge_firehose_role"
-#   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
-#
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Action = "sts:AssumeRole",
-#         Effect = "Allow",
-#         Principal = {
-#           Service = "events.amazonaws.com"
-#         }
-#       },
-#       {
-#         Action = "sts:AssumeRole",
-#         Effect = "Allow",
-#         Principal = {
-#           Service = "firehose.amazonaws.com"
-#         }
-#       }
-#     ]
-#   })
-# }
+resource "aws_iam_role" "userplatform_cpp_eventbridge_firehose_role_eu" {
+  name = "userplatform_cpp_eventbridge_firehose_role_eu"
+  # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
 
-# resource "aws_iam_role_policy" "userplatform_cpp_eventbridge_firehose_policy" {
-#   name = "userplatform_cpp_eventbridge_firehose_policy"
-#   role = aws_iam_role.userplatform_cpp_eventbridge_firehose_role.id
-#
-#   policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [{
-#       Action = [
-#         "firehose:PutRecord",
-#         "firehose:PutRecordBatch"
-#       ],
-#       Effect   = "Allow",
-#       Resource = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn
-#       },
-#       {
-#         Action = [
-#           "s3:AbortMultipartUpload",
-#           "s3:GetBucketLocation",
-#           "s3:GetObject",
-#           "s3:ListBucket",
-#           "s3:ListBucketMultipartUploads",
-#           "s3:PutObject",
-#           "s3:PutObjectAcl"
-#         ],
-#         Effect = "Allow",
-#         Resource = [
-#           "arn:aws:s3:::${local.selected_bucket}",
-#           "arn:aws:s3:::${local.selected_bucket}/*"
-#         ]
-#       },
-#       {
-#         Action = [
-#           "logs:PutLogEvents",
-#           "logs:CreateLogStream",
-#           "logs:CreateLogGroup",
-#           "logs:DescribeLogStreams"
-#         ],
-#         Effect   = "Allow",
-#         Resource = "*"
-#     }]
-#   })
-# }
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "events.amazonaws.com"
+        }
+      },
+      {
+        Action = "sts:AssumeRole",
+        Effect = "Allow",
+        Principal = {
+          Service = "firehose.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "userplatform_cpp_eventbridge_firehose_policy_eu" {
+  name = "userplatform_cpp_eventbridge_firehose_policy_eu"
+  role = aws_iam_role.userplatform_cpp_eventbridge_firehose_role_eu.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Action = [
+        "firehose:PutRecord",
+        "firehose:PutRecordBatch"
+      ],
+      Effect   = "Allow",
+      Resource = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn
+      },
+      {
+        Action = [
+          "s3:AbortMultipartUpload",
+          "s3:GetBucketLocation",
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:ListBucketMultipartUploads",
+          "s3:PutObject",
+          "s3:PutObjectAcl"
+        ],
+        Effect = "Allow",
+        Resource = [
+          "arn:aws:s3:::${local.selected_bucket_eu}",
+          "arn:aws:s3:::${local.selected_bucket_eu}/*"
+        ]
+      },
+      {
+        Action = [
+          "logs:PutLogEvents",
+          "logs:CreateLogStream",
+          "logs:CreateLogGroup",
+          "logs:DescribeLogStreams"
+        ],
+        Effect   = "Allow",
+        Resource = "*"
+    }]
+  })
+}
 
 # Firehose delivery streams + SNS for failure
 resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_delivery_stream_eu" {
@@ -92,8 +92,8 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   destination = "extended_s3"
 
   extended_s3_configuration {
-    role_arn            = aws_iam_role.userplatform_cpp_eventbridge_firehose_role.arn
-    bucket_arn          = "arn:aws:s3:::${local.selected_bucket}"
+    role_arn            = aws_iam_role.userplatform_cpp_eventbridge_firehose_role_eu.arn
+    bucket_arn          = "arn:aws:s3:::${local.selected_bucket_eu}"
     prefix              = "raw/cppv2-collector/"
     error_output_prefix = "raw/cppv2-errors/"
     compression_format  = "UNCOMPRESSED"
@@ -172,7 +172,7 @@ resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target
   provider       = aws.eu
   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
   arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn
-  role_arn       = aws_iam_role.userplatform_cpp_eventbridge_firehose_role.arn
+  role_arn       = aws_iam_role.userplatform_cpp_eventbridge_firehose_role_eu.arn
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.name
 }
 
