@@ -18,12 +18,12 @@ locals {
       detail_type = "EU",
       bucket      = var.userplatform_s3_bucket["eu"]
     },
-    # ap = {
-    #   region      = "ap-southeast-1",
-    #   event_bus   = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn,
-    #   detail_type = "AP",
-    #   bucket      = var.userplatform_s3_bucket["ap"]
-    # }
+    ap = {
+      region      = "ap-southeast-1",
+      event_bus   = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn,
+      detail_type = "AP",
+      bucket      = var.userplatform_s3_bucket["ap"]
+    }
   }
 }
 
