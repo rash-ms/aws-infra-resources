@@ -1,11 +1,11 @@
 # EU EventBridge
 resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_ap" {
-  provider = aws.eu
+  provider = aws.ap
   name     = "userplatform_cpp_event_bus_ap"
 }
 
 resource "aws_cloudwatch_event_bus_policy" "userplatform_cpp_eventbridge_cross_region_ap_policy" {
-  provider       = aws.eu
+  provider       = aws.ap
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
   policy = jsonencode({
     Version = "2012-10-17",
