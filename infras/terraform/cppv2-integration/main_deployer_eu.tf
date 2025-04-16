@@ -4,7 +4,7 @@ resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_eu" {
   name     = "userplatform_cpp_event_bus_eu"
 }
 
-resource "aws_cloudwatch_event_bus_policy" "eu_policy" {
+resource "aws_cloudwatch_event_bus_policy" "userplatform_cpp_eventbridge_cross_region_eu_policy" {
   provider       = aws.eu
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.name
   policy = jsonencode({
