@@ -81,7 +81,7 @@ resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy"
 }
 
 resource "aws_cloudwatch_event_bus_policy" "userplatform_cpp_eventbridge_cross_region_us_policy" {
-  provider       = aws.eu
+  provider       = aws.us
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
   policy = jsonencode({
     Version = "2012-10-17",
