@@ -86,7 +86,11 @@ resource "aws_iam_role_policy" "cpp_apigw_evtbridge_firehose_logs_policy" {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:GetLogEvents",
+          "logs:FilterLogEvents"
         ],
         Resource = [
           "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_us.arn}:*",
