@@ -261,10 +261,17 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration" {
   #   "integration.request.header.Content-Type" = "'application/json'"
   # }
 
+  #   request_templates = {
+  #   "application/json" = templatefile("${path.module}/templates/eventbridge.tftpl", {
+  #     event_bus_arn = local.route_configs[each.key].event_bus
+  #     detail_type   = local.route_configs[each.key].detail_type
+  #     route_key     = each.key
+  #   })
+  # }
+
   request_templates = {
     "application/json" = templatefile("${path.module}/templates/eventbridge.tftpl", {
       event_bus_arn = local.route_configs[each.key].event_bus
-      detail_type   = local.route_configs[each.key].detail_type
       route_key     = each.key
     })
   }
