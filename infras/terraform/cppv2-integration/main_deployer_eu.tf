@@ -21,6 +21,9 @@ resource "aws_cloudwatch_event_bus_policy" "userplatform_cpp_eventbridge_cross_r
       }
     ]
   })
+  depends_on = [
+    aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu
+  ]
 }
 
 
@@ -184,7 +187,7 @@ resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_r
 
 resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_eu" {
   provider       = aws.eu
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_forwarder.name
+  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_eu.name
   arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn
   role_arn       = aws_iam_role.userplatform_cpp_eventbridge_firehose_role.arn
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.name
@@ -192,7 +195,7 @@ resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target
 
 resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target_eu" {
   provider       = aws.eu
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_forwarder.name
+  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_eu.name
   arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs.arn
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.name
   depends_on     = [aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs]
