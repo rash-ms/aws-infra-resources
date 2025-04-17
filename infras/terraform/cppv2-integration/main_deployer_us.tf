@@ -86,11 +86,7 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "logs:DescribeLogGroups",
-          "logs:DescribeLogStreams",
-          "logs:GetLogEvents",
-          "logs:FilterLogEvents"
+          "logs:PutLogEvents"
         ],
         Resource = [
           "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_us.arn}:*",
@@ -107,6 +103,48 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
     ]
   })
 }
+
+
+resource "aws_iam_role" "userplatform_cpp_api_gateway_cloudwatch_logging_role" {
+  name = "userplatform_cpp_api_gateway_cloudwatch_logging_role"
+  # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Action = "sts:AssumeRole",
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        },
+        Effect = "Allow"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_cloudwatch_logging_policy" {
+  name = "userplatform_cpp_api_gateway_cloudwatch_logging_policy"
+  role = aws_iam_role.userplatform_cpp_api_gateway_cloudwatch_logging_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect = "Allow",
+      Action = [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "logs:GetLogEvents",
+        "logs:FilterLogEvents"
+      ],
+      Resource = "*"
+    }]
+  })
+}
+
 
 # resource "aws_iam_role" "userplatform_cpp_api_gateway_eventbridge_role" {
 #   name = "userplatform_cpp_api_gateway_eventbridge_role"
@@ -382,12 +420,8 @@ resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_s
 
 resource "aws_api_gateway_account" "userplatform_cpp_api_account_settings_us" {
   provider            = aws.us
-  cloudwatch_role_arn = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  cloudwatch_role_arn = aws_iam_role.userplatform_cpp_api_gateway_cloudwatch_logging_role.arn
 
-  depends_on = [
-    aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role,
-    aws_iam_role_policy.cpp_integration_apigw_evtbridge_firehose_logs_policy
-  ]
 }
 
 resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_us" {
