@@ -198,6 +198,7 @@ resource "aws_api_gateway_account" "userplatform_cpp_api_account_settings_eu" {
   cloudwatch_role_arn = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   depends_on = [
+    aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role,
     aws_iam_role_policy.cpp_integration_apigw_evtbridge_firehose_logs_policy
   ]
 }
