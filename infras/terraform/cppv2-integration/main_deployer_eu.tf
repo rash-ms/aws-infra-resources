@@ -4,6 +4,28 @@ resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_eu" {
   name     = "userplatform_cpp_event_bus_eu"
 }
 
+# resource "aws_cloudwatch_event_bus_policy" "userplatform_cpp_eventbridge_cross_region_eu_policy" {
+#   provider       = aws.eu
+#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.name
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Sid    = "AllowUSAPIGatewayToEU",
+#         Effect = "Allow",
+#         Principal = {
+#           AWS = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
+#         },
+#         Action   = "events:PutEvents",
+#         Resource = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn
+#       }
+#     ]
+#   })
+#   depends_on = [
+#     aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu
+#   ]
+# }
+
 resource "aws_cloudwatch_event_bus_policy" "userplatform_cpp_eventbridge_cross_region_eu_policy" {
   provider       = aws.eu
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.name
@@ -14,7 +36,7 @@ resource "aws_cloudwatch_event_bus_policy" "userplatform_cpp_eventbridge_cross_r
         Sid    = "AllowUSAPIGatewayToEU",
         Effect = "Allow",
         Principal = {
-          AWS = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
+          AWS = "${var.account_id}"
         },
         Action   = "events:PutEvents",
         Resource = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn
@@ -25,7 +47,6 @@ resource "aws_cloudwatch_event_bus_policy" "userplatform_cpp_eventbridge_cross_r
     aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu
   ]
 }
-
 
 # resource "aws_iam_role" "userplatform_cpp_eventbridge_firehose_role" {
 #   name = "userplatform_cpp_eventbridge_firehose_role"
