@@ -29,7 +29,8 @@ resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy"
       Effect = "Allow",
       Resource = [
         "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn}",
-        "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn}"
+        "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn}",
+        "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn}"
       ]
     }]
   })
