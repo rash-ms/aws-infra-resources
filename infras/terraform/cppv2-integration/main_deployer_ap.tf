@@ -179,6 +179,7 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {
 
 # Configure Method Settings for Detailed Logging and Caching
 resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_settings_ap" {
+  provider    = aws.ap
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
   stage_name  = aws_api_gateway_stage.userplatform_cpp_api_stage_ap.stage_name
   method_path = "*/*" # Apply to all methods and resources
@@ -301,11 +302,13 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
 }
 
 resource "aws_cloudwatch_log_group" "userplatform_cpp_firehose_to_s3_ap" {
+  provider          = aws.ap
   name              = "/aws/kinesisfirehose/userplatform_cpp_firehose_to_s3_ap"
   retention_in_days = 30
 }
 
 resource "aws_cloudwatch_log_stream" "userplatform_cpp_firehose_to_s3_log_stream_ap" {
+  provider       = aws.ap
   name           = "userplatform_cpp_firehose_to_s3_log_stream_ap"
   log_group_name = aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_ap.name
 }
