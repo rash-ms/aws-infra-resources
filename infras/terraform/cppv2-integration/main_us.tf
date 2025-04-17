@@ -1,9 +1,3 @@
-# locals {
-#   route_path      = var.route_path
-#   bucket_map      = var.userplatform_s3_bucket
-#   selected_bucket = local.bucket_map["us"]
-# }
-
 locals {
   route_configs = {
     us = {
@@ -45,25 +39,6 @@ resource "aws_iam_role" "userplatform_cpp_api_gateway_eventbridge_forwarder_role
   })
 }
 
-# resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy" {
-#   name = "userplatform_cpp_api_gateway_eventbridge_policy"
-#   role = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.id
-
-#   policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [{
-#       Action = [
-#         "events:PutEvents"
-#       ],
-#       Effect = "Allow",
-#       Resource = [
-#         "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn}",
-#         "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn}"
-#       ]
-#     }]
-#   })
-# }
-
 resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy" {
   name = "userplatform_cpp_api_gateway_eventbridge_policy"
   role = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.id
@@ -79,29 +54,6 @@ resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy"
     }]
   })
 }
-
-# resource "aws_cloudwatch_event_bus_policy" "userplatform_cpp_eventbridge_cross_region_us_policy" {
-#   provider       = aws.us
-#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
-#   policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Sid    = "AllowUSAPIGatewayToUS",
-#         Effect = "Allow",
-#         Principal = {
-#           AWS = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
-#           AWS = "${var.account_id}"
-#         },
-#         Action   = "events:PutEvents",
-#         Resource = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn
-#       }
-#     ]
-#   })
-#   depends_on = [
-#     aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us
-#   ]
-# }
 
 resource "aws_cloudwatch_event_bus_policy" "userplatform_cpp_eventbridge_cross_region_us_policy" {
   provider       = aws.us
@@ -197,50 +149,6 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method" {
   api_key_required = true
 }
 
-
-
-# resource "aws_api_gateway_integration" "userplatform_cpp_api_integration" {
-#   for_each = aws_api_gateway_resource.userplatform_cpp_api_resources
-
-#   provider                = aws.us
-#   rest_api_id             = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
-#   resource_id             = each.value.id
-#   http_method             = aws_api_gateway_method.userplatform_cpp_api_method[each.key].http_method
-#   integration_http_method = "POST"
-#   type                    = "AWS"
-#   # uri                     = "arn:aws:apigateway:us-east-1:events:path//"
-#   uri                     = "arn:aws:apigateway:${local.route_configs[each.key].region}:events:path//"
-#   credentials             = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
-#   passthrough_behavior    = "WHEN_NO_TEMPLATES"
-#   # passthrough_behavior = "WHEN_NO_MATCH"
-
-
-#   # request_parameters = {
-#   #   "integration.request.header.Content-Type" = "'application/json'"
-#   # }
-
-#   request_templates = {
-#     "application/json" = <<EOF
-# #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-# #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-# #set($market = $input.json('$.body.payload.fullDocument_payload.market'))
-# #if(!$market)
-#   #set($market = "UNKNOWN")
-# #end
-# {
-#   "Entries": [
-#     {
-#       "Source": "cpp-${each.key}-api",
-#       "DetailType": $market,
-#       "Detail": "$util.escapeJavaScript($input.body)",
-#       "EventBusName": "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name}"
-#     }
-#   ]
-# }
-# EOF
-#   }
-# }
-
 resource "aws_api_gateway_integration" "userplatform_cpp_api_integration" {
   for_each = aws_api_gateway_resource.userplatform_cpp_api_resources
 
@@ -251,7 +159,8 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration" {
   integration_http_method = "POST"
   type                    = "AWS"
   # uri                     = "arn:aws:apigateway:us-east-1:events:path//"
-  uri                  = "arn:aws:apigateway:${local.route_configs[each.key].region}:events:path//"
+  uri = "arn:aws:apigateway:${local.route_configs[each.key].region}:events:path//"
+
   credentials          = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
   passthrough_behavior = "WHEN_NO_TEMPLATES"
   # passthrough_behavior = "WHEN_NO_MATCH"
@@ -259,14 +168,6 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration" {
 
   # request_parameters = {
   #   "integration.request.header.Content-Type" = "'application/json'"
-  # }
-
-  #   request_templates = {
-  #   "application/json" = templatefile("${path.module}/templates/eventbridge.tftpl", {
-  #     event_bus_arn = local.route_configs[each.key].event_bus
-  #     detail_type   = local.route_configs[each.key].detail_type
-  #     route_key     = each.key
-  #   })
   # }
 
   request_templates = {
@@ -368,25 +269,6 @@ resource "aws_cloudwatch_log_group" "userplatform_cpp_event_bus_logs" {
   name              = "/aws/events/userplatform_cpp_event_bus_logs"
   retention_in_days = 14
 }
-
-# resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
-#   provider    = aws.us
-#   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api.id
-
-#   depends_on = [
-#     aws_api_gateway_method.userplatform_cpp_api_method["us"],
-#     aws_api_gateway_method.userplatform_cpp_api_method["eu"],
-#     aws_api_gateway_method.userplatform_cpp_api_method["ap"],
-
-#     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response["us"],
-#     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response["eu"],
-#     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response["ap"],
-
-#     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response["us"],
-#     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response["eu"],
-#     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response["ap"]
-#   ]
-# }
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment" {
   provider    = aws.us
@@ -617,19 +499,6 @@ resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_r
   })
 
 }
-
-# resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_rule_us" {
-#   provider       = aws.us
-#   name           = "userplatform_cpp_eventbridge_to_firehose_rule_us"
-#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
-#
-#   event_pattern = jsonencode({
-#     "detail" : [{
-#       "prefix" : "{\"body\":{\"payload\":{\"fullDocument_payload\":{\"market\":\"US\""
-#     }]
-#   })
-#
-# }
 
 resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_forward_to_us" {
   provider       = aws.us
