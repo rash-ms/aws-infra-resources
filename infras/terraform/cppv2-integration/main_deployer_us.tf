@@ -88,7 +88,7 @@ resource "aws_iam_role_policy" "cpp_apigw_evtbridge_firehose_logs_policy" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ],
-        Resource = [          
+        Resource = [
           "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_us.arn}:*",
           "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_eu.arn}:*",
           "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_ap.arn}:*",
