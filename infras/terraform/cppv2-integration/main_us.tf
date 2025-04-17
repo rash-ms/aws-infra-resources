@@ -594,7 +594,7 @@ resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_r
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_forwarder.name
 
   event_pattern = jsonencode({
-    "source": ["cpp-stream-hook"]
+    "source" : ["cpp-stream-hook"]
   })
 
 }
