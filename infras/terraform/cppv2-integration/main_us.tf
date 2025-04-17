@@ -97,6 +97,9 @@ resource "aws_cloudwatch_event_bus_policy" "userplatform_cpp_eventbridge_cross_r
       }
     ]
   })
+  depends_on = [
+    aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us
+  ]
 }
 
 # NOTE NOTE NOTE NOTE ****************
@@ -617,6 +620,7 @@ resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_forward_to_
   role_arn       = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_forwarder.name
 }
+
 
 resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_us" {
   provider       = aws.us
