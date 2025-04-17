@@ -4,11 +4,12 @@
 #if(!$market)
   #set($market = "UNKNOWN")
 #end
+#set($detail_type = $market.toUpperCase())
 {
   "Entries": [
     {
-      "Source": "cpp-${route_key}-api",
-      "DetailType": "${detail_type}",
+      "Source": "cpp-stream-hook",
+      "DetailType": $detail_type,
       "Detail": "$util.escapeJavaScript($input.body)",
       "EventBusName": "${event_bus_arn}"
     }

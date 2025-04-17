@@ -1,28 +1,5 @@
-# locals {
-#   route_configs = {
-#     us = {
-#       region      = "us-east-1",
-#       event_bus   = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn,
-#       detail_type = "US",
-#       bucket      = var.userplatform_s3_bucket["us"]
-#     },
-#     eu = {
-#       region      = "eu-west-1",
-#       event_bus   = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn,
-#       detail_type = "EU",
-#       bucket      = var.userplatform_s3_bucket["eu"]
-#     },
-#     ap = {
-#       region      = "ap-southeast-1",
-#       event_bus   = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn,
-#       detail_type = "AP",
-#       bucket      = var.userplatform_s3_bucket["ap"]
-#     }
-#   }
-# }
-
-# resource "aws_iam_role" "userplatform_cpp_api_gateway_eventbridge_forwarder_role" {
-#   name = "userplatform_cpp_api_gateway_eventbridge_forwarder_role"
+# resource "aws_iam_role" "userplatform_cpp_api_gateway_eventbridge_role" {
+#   name = "userplatform_cpp_api_gateway_eventbridge_role"
 #   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
 
 #   assume_role_policy = jsonencode({
@@ -41,7 +18,7 @@
 
 # resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_eventbridge_policy" {
 #   name = "userplatform_cpp_api_gateway_eventbridge_policy"
-#   role = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.id
+#   role = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_role.id
 
 #   policy = jsonencode({
 #     Version = "2012-10-17",
@@ -77,7 +54,6 @@
 #   ]
 # }
 
-# # NOTE NOTE NOTE NOTE ****************
 # resource "aws_iam_role" "userplatform_cpp_api_gateway_cloudwatch_logging_role" {
 #   name = "userplatform_cpp_api_gateway_cloudwatch_logging_role"
 #   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
@@ -160,7 +136,7 @@
 #   type                    = "AWS"
 #   uri                     = "arn:aws:apigateway:us-east-1:events:path//"
 #   # uri                  = "arn:aws:apigateway:${local.route_configs[each.key].region}:events:path//"
-#   credentials          = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
+#   credentials          = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_role.arn
 #   passthrough_behavior = "WHEN_NO_TEMPLATES"
 #   # passthrough_behavior = "WHEN_NO_MATCH"
 
@@ -504,7 +480,7 @@
 #   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_forwarder.name
 #   target_id      = "userplatform_cpp_eventbridge_forward_to_us"
 #   arn            = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn
-#   role_arn       = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
+#   role_arn       = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_role.arn
 #   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_forwarder.name
 # }
 
@@ -514,7 +490,7 @@
 #   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_forwarder.name
 #   target_id      = "userplatform_cpp_eventbridge_forward_to_eu"
 #   arn            = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn
-#   role_arn       = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
+#   role_arn       = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_role.arn
 #   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_forwarder.name
 # }
 
