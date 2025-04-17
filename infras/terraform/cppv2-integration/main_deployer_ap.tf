@@ -14,7 +14,7 @@ resource "aws_cloudwatch_event_bus_policy" "userplatform_cpp_eventbridge_cross_r
         Sid    = "AllowUSAPIGatewayToAP",
         Effect = "Allow",
         Principal = {
-          AWS = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
+          AWS = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_role.arn
         },
         Action   = "events:PutEvents",
         Resource = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn

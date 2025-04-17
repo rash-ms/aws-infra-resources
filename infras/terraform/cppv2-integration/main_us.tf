@@ -569,10 +569,11 @@ resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_r
 
   event_pattern = jsonencode({
     # "detail-type" : ["US"]
-    source = ["api"]
+    source = ["cpp-stream-hook"]
   })
 
 }
+
 
 resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_rule_us" {
   provider       = aws.us
@@ -599,19 +600,22 @@ resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_r
 # }
 
 resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_forward_to_us" {
-  provider  = aws.us
-  rule      = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_forwarder.name
-  target_id = "userplatform_cpp_eventbridge_forward_to_us"
-  arn       = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn
-  role_arn  = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
+  provider       = aws.us
+  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_forwarder.name
+  target_id      = "userplatform_cpp_eventbridge_forward_to_us"
+  arn            = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn
+  role_arn       = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
+  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_forwarder.name
 }
 
+
 resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_forward_to_eu" {
-  provider  = aws.us
-  rule      = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_forwarder.name
-  target_id = "userplatform_cpp_eventbridge_forward_to_eu"
-  arn       = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn
-  role_arn  = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
+  provider       = aws.us
+  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_forwarder.name
+  target_id      = "userplatform_cpp_eventbridge_forward_to_eu"
+  arn            = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn
+  role_arn       = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_forwarder_role.arn
+  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_forwarder.name
 }
 
 resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_us" {
