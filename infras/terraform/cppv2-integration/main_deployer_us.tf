@@ -22,8 +22,8 @@ resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
 }
 
 
-resource "aws_iam_role_policy" "cpp_apigw_evtbridge_firehose_logs_policy" {
-  name = "cpp_apigw_evtbridge_firehose_logs_policy"
+resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_policy" {
+  name = "cpp_integration_apigw_evtbridge_firehose_logs_policy"
   role = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.id
 
   policy = jsonencode({
