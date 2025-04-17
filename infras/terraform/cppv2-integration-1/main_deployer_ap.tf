@@ -14,13 +14,16 @@
 #         Sid    = "AllowUSAPIGatewayToAP",
 #         Effect = "Allow",
 #         Principal = {
-#           AWS = aws_iam_role.userplatform_cpp_api_gateway_eventbridge_role.arn
+#           AWS = "${var.account_id}"
 #         },
 #         Action   = "events:PutEvents",
 #         Resource = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn
 #       }
 #     ]
 #   })
+#   depends_on = [
+#     aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap
+#   ]
 # }
 
 
