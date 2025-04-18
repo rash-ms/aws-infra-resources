@@ -44,7 +44,7 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
   request_templates = {
     "application/json" = templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
       event_bus_arn = local.route_configs["eu"].event_bus
-      detail_type   = local.route_configs["us"].route_path
+      detail_type   = local.route_configs["eu"].route_path
     })
   }
 }
