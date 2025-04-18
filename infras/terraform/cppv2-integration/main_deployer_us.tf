@@ -510,7 +510,7 @@ resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_targ
 }
 
 
-# 1. SNS Topic for alerts
+# SNS Topic for alerts
 resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_us" {
   provider = aws.us
   name     = "userplatform_cpp_firehose_failure_alert_topic_us"

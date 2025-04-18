@@ -366,8 +366,8 @@
 # }
 
 
-# # 1. SNS Topic for alerts
-# resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_eu" {
-#   provider = aws.eu
-#   name     = "userplatform_cpp_firehose_failure_alert_topic_eu"
-# }
+# SNS Topic for alerts
+resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_eu" {
+  provider = aws.eu
+  name     = "userplatform_cpp_firehose_failure_alert_topic_eu"
+}
