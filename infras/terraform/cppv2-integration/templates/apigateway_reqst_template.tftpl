@@ -2,9 +2,8 @@
 #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
 #set($fullRouteKey = $context.routeKey)
 #set($routeParts = $fullRouteKey.split(" "))
-#set($route = $routeParts[1])
+#set($route = $routeParts[1].trim())
 #set($get_route = $route.replaceAll("/", ""))
-
 {
   "Entries": [
     {
