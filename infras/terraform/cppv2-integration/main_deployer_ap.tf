@@ -366,9 +366,9 @@
 # }
 
 
-# SNS Topic for alerts
-resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_ap" {
-  provider = aws.ap
-  name     = "userplatform_cpp_firehose_failure_alert_topic_ap"
-}
+# # SNS Topic for alerts
+# resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_ap" {
+#   provider = aws.ap
+#   name     = "userplatform_cpp_firehose_failure_alert_topic_ap"
+# }
 

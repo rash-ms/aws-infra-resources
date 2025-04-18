@@ -546,8 +546,8 @@ resource "aws_chatbot_slack_channel_configuration" "userplatform_cpp_firehose_al
 
   sns_topic_arns = [
     aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn,
-    aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn,
-    aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
+    # aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn,
+    # aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
   ]
 
   iam_role_arn  = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
