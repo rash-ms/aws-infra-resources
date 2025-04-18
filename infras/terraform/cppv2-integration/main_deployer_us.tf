@@ -370,9 +370,9 @@ resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_s
   method_path = "*/*" # Apply to all methods and resources
 
   settings {
-    metrics_enabled      = true    # Enable CloudWatch metrics
-    logging_level        = "ERROR" # Set logging level to INFO
-    data_trace_enabled   = true    # Enable data trace logging
+    metrics_enabled    = true    # Enable CloudWatch metrics
+    logging_level      = "ERROR" # Set logging level to INFO
+    data_trace_enabled = true    # Enable data trace logging
   }
 }
 
