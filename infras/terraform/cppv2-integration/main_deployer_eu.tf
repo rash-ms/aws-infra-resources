@@ -296,6 +296,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_4xx_errors_eu" {
 
 # CloudWatch alarm for EventBridge Failed Invocation to Target
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_eventbridge_failed_invocations_eu" {
+  provider    = aws.eu
   alarm_name  = "Userplatform-CPP-EventBridge-Failed-Invocations-EU"
   namespace   = "AWS/Events"
   metric_name = "FailedInvocations"
