@@ -144,46 +144,6 @@ resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_cloudwatch_logging_
   })
 }
 
-resource "aws_iam_role" "userplatform_cpp_api_gateway_cloudwatch_logging_role" {
-  name = "userplatform_cpp_api_gateway_cloudwatch_logging_role"
-  # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = "sts:AssumeRole",
-        Principal = {
-          Service = "apigateway.amazonaws.com"
-        },
-        Effect = "Allow"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_cloudwatch_logging_policy" {
-  name = "userplatform_cpp_api_gateway_cloudwatch_logging_policy"
-  role = aws_iam_role.userplatform_cpp_api_gateway_cloudwatch_logging_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect = "Allow",
-      Action = [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams",
-        "logs:GetLogEvents",
-        "logs:FilterLogEvents"
-      ],
-      Resource = "*"
-    }]
-  })
-}
-
 # REST API Gateway
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_us" {
   provider    = aws.us
