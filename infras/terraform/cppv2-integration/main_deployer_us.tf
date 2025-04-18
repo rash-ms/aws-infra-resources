@@ -288,7 +288,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   ]
 
   triggers = {
-    redeploy_on_template_change = sha1(templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
+    redeploy_tmpt_changes = sha1(templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
       event_bus_arn = local.route_configs["us"].event_bus
       detail_type   = local.route_configs["us"].route_path
     }))
