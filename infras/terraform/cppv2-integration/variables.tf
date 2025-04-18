@@ -6,6 +6,10 @@ variable "account_id" {
   type = string
 }
 
+variable "stage_name" {
+  type = string
+}
+
 variable "environment" {
   type    = string
   default = "dev"

@@ -1,15 +1,15 @@
 #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
 #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-#set($market = $input.json('$.body.payload.fullDocument_payload.market'))
-#if(!$market)
-  #set($market = "UNKNOWN")
-#end
-#set($detail_type = $market.toUpperCase())
+#set($fullRouteKey = $context.routeKey)
+#set($routeParts = $fullRouteKey.split(" "))
+#set($route = $routeParts[1])
+#set($get_route = $route.replaceAll("/", ""))
+
 {
   "Entries": [
     {
-      "Source": "cpp-stream-hook",
-      "DetailType": $detail_type,
+      "Source": "cpp-api-streamhook",
+      "DetailType": $get_route,
       "Detail": "$util.escapeJavaScript($input.body)",
       "EventBusName": "${event_bus_arn}"
     }
