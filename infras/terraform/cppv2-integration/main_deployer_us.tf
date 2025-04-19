@@ -9,8 +9,8 @@
 ## --------------------------------------------------
 
 resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
-  name                 = "cpp_integration_apigw_evtbridge_firehose_logs_role"
-  permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
+  name = "cpp_integration_apigw_evtbridge_firehose_logs_role"
+  # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -119,8 +119,8 @@ resource "aws_iam_role_policy_attachment" "userplatform_cpp_chatbot_attach" {
 }
 
 resource "aws_iam_role" "userplatform_cpp_api_gateway_cloudwatch_logging_role" {
-  name                 = "userplatform_cpp_api_gateway_cloudwatch_logging_role"
-  permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
+  name = "userplatform_cpp_api_gateway_cloudwatch_logging_role"
+  # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
