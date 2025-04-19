@@ -1,0 +1,12 @@
+#set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+#set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+{
+  "Entries": [
+    {
+      "Source": "cpp-api-streamhook",
+      "DetailType": "${detail_type}",
+      "Detail": "$util.escapeJavaScript($input.body)",
+      "EventBusName": "${event_bus_arn}"
+    }
+  ]
+}
