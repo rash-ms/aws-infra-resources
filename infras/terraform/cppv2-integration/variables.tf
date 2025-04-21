@@ -13,6 +13,15 @@ variable "stage_name" {
 variable "environment" {
   type    = string
   default = "dev"
+  # default = "stg"
+}
+
+variable "slack_channel_id" {
+  type = string
+}
+
+variable "slack_workspace_id" {
+  type = string
 }
 
 variable "userplatform_s3_bucket" {
@@ -42,12 +51,4 @@ variable "tags" {
     "application" = "aws-infra-resources"
     "owner"       = "data-platform"
   }
-}
-
-variable "slack_channel_id" {
-  type = string
-}
-
-variable "slack_workspace_id" {
-  type = string
 }
