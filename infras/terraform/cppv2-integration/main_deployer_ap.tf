@@ -14,7 +14,8 @@ resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_ap" {
   name        = "userplatform_cpp_rest_api_ap"
   description = "REST API for Userplatform CPP AP Integration"
   endpoint_configuration {
-    types = ["REGIONAL"]
+    # types = ["REGIONAL"]
+    types = ["EDGE"]
   }
 }
 
