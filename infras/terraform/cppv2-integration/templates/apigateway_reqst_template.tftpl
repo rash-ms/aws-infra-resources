@@ -7,7 +7,7 @@
     {
       "Source": "cpp-api-streamhook",
       "DetailType": "${detail_type}",
-      "Detail": "$util.toJson($item)",
+      "Detail": "$util.escapeJavaScript($util.toJson($item))",
       "EventBusName": "${event_bus_arn}"
     }#if($foreach.hasNext),#end
     #end
