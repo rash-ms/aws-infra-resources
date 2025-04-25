@@ -288,6 +288,7 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
     bucket_arn = "arn:aws:s3:::${local.route_configs["ap"].bucket}"
     # prefix              = "raw/cppv2-collector/"
     # error_output_prefix = "raw/cppv2-errors/"
+    buffering_size     = 64
     compression_format = "UNCOMPRESSED"
 
     cloudwatch_logging_options {
