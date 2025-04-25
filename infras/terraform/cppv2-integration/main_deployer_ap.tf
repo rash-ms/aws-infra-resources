@@ -300,8 +300,11 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
       enabled = "true"
     }
 
-    prefix              = "raw/cppv2-collector-test/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
-    error_output_prefix = "raw/cppv2-errors-test/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
+    # prefix              = "raw/cppv2-collector-test/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
+    # error_output_prefix = "raw/cppv2-errors-test/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
+
+    prefix              = "raw/cppv2-collector-test/source=!{partitionKeyFromQuery:source}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
+    error_output_prefix = "raw/cppv2-errors-test/source=!{partitionKeyFromQuery:source}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
 
     processing_configuration {
       enabled = "true"
@@ -309,6 +312,21 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
       # New line delimiter processor
       processors {
         type = "AppendDelimiterToRecord"
+      }
+
+      # Add MetadataExtraction processor for dynamic partitioning
+      processors {
+        type = "MetadataExtraction"
+
+        parameters {
+          parameter_name  = "JsonParsingEngine"
+          parameter_value = "JQ-1.6"
+        }
+
+        parameters {
+          parameter_name  = "MetadataExtractionQuery"
+          parameter_value = "{source: .source}"
+        }
       }
     }
   }
