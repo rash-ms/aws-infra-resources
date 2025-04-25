@@ -444,8 +444,10 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   destination = "extended_s3"
 
   extended_s3_configuration {
-    role_arn           = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-    bucket_arn         = "arn:aws:s3:::${local.route_configs["us"].bucket}"
+    role_arn   = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+    bucket_arn = "arn:aws:s3:::${local.route_configs["us"].bucket}"
+    # prefix              = "raw/cppv2-collector/"
+    # error_output_prefix = "raw/cppv2-errors/"
     compression_format = "UNCOMPRESSED"
 
     cloudwatch_logging_options {
@@ -458,8 +460,8 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
       enabled = "true"
     }
 
-    prefix              = "raw/cppv2-collector/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
-    error_output_prefix = "raw/cppv2-errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
+    prefix              = "raw/cppv2-collector-test/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
+    error_output_prefix = "raw/cppv2-error-test/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
 
     processing_configuration {
       enabled = "true"
