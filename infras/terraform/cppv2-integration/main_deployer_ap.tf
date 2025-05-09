@@ -407,9 +407,9 @@ resource "aws_cloudwatch_log_metric_filter" "userplatform_cpp_eventbridge_metric
 }
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_malformed_eventbridge_events_ap" {
-  provider            = aws.eu
+  provider            = aws.ap
   alarm_name          = "Userplatform-CPP-EventBridge-MalformedEvents-Alarm-AP"
-  alarm_description   = "Triggered when malformed events are sent to EventBridge"
+  alarm_description   = "Triggered Malformed Payload To EventBridge"
   namespace           = "EventBridge/Custom"
   metric_name         = "MalformedEvents"
   statistic           = "Sum"
