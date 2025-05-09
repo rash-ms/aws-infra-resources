@@ -526,7 +526,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_5xx_errors_us" {
   statistic           = "Sum"
   period              = 300
   evaluation_periods  = 1
-  threshold           = 1
+  threshold           = 2
   comparison_operator = "GreaterThanOrEqualToThreshold"
   alarm_description   = "Triggers on backend (5XX) integration failures"
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
@@ -544,10 +544,43 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_4xx_errors_us" {
   statistic           = "Sum"
   period              = 300
   evaluation_periods  = 1
-  threshold           = 5
+  threshold           = 2
   comparison_operator = "GreaterThanOrEqualToThreshold"
   alarm_description   = "High rate of 4XX client errors detected"
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
+}
+
+# Filter "MalformedDetail" on EventBridge
+resource "aws_cloudwatch_log_metric_filter" "userplatform_cpp_eventbridge_metric_filter_us" {
+  provider       = aws.us
+  name           = "Userplatform-CPP-MalformedDetailFiltered-US"
+  log_group_name = local.route_configs["us"].apigw_backend_logs_us
+  pattern        = "\"MalformedDetail\""
+
+  metric_transformation {
+    name          = "MalformedEvents"
+    namespace     = "EventBridge/Custom"
+    value         = "1"
+    default_value = 0
+  }
+}
+
+resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_malformed_eventbridge_events_us" {
+  provider            = aws.us
+  alarm_name          = "Userplatform-CPP-EventBridge-MalformedEvents-Alarm-US"
+  alarm_description   = "Triggered when malformed events are sent to EventBridge"
+  namespace           = "EventBridge/Custom"
+  metric_name         = "MalformedEvents"
+  statistic           = "Sum"
+  period              = 60 # 1 minutes
+  evaluation_periods  = 1
+  threshold           = 1
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  treat_missing_data  = "notBreaching"
+
+  alarm_actions = [
+    aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
+  ]
 }
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_no_data_24h_us" {
@@ -564,6 +597,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_no_data_24h_us
   threshold           = 0
   comparison_operator = "LessThanOrEqualToThreshold"
   alarm_description   = "Firehose inactivity for 24 hours"
+  treat_missing_data  = "breaching"
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
 
