@@ -395,7 +395,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_4xx_errors_ap" {
 resource "aws_cloudwatch_log_metric_filter" "userplatform_cpp_eventbridge_metric_filter_ap" {
   provider       = aws.ap
   name           = "Userplatform-CPP-MalformedDetailFiltered-AP"
-  log_group_name = local.route_configs["ap"].apigw_backend_logs_ap
+  log_group_name = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id}/${aws_api_gateway_stage.userplatform_cpp_api_stage_ap.stage_name}"
   pattern        = "\"MalformedDetail\""
 
   metric_transformation {
