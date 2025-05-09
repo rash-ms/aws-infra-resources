@@ -438,7 +438,6 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_no_data_24h_ap
   threshold           = 0
   comparison_operator = "LessThanOrEqualToThreshold"
   alarm_description   = "Firehose inactivity for 24 hours"
-  treat_missing_data  = "breaching"
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn]
 }
 

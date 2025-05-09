@@ -529,6 +529,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_5xx_errors_us" {
   threshold           = 2
   comparison_operator = "GreaterThanOrEqualToThreshold"
   alarm_description   = "Triggers on backend (5XX) integration failures"
+  treat_missing_data  = "notBreaching"
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
 
@@ -547,6 +548,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_4xx_errors_us" {
   threshold           = 2
   comparison_operator = "GreaterThanOrEqualToThreshold"
   alarm_description   = "High rate of 4XX client errors detected"
+  treat_missing_data  = "notBreaching"
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
 
@@ -597,7 +599,6 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_no_data_24h_us
   threshold           = 0
   comparison_operator = "LessThanOrEqualToThreshold"
   alarm_description   = "Firehose inactivity for 24 hours"
-  treat_missing_data  = "breaching"
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
 
@@ -612,6 +613,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm_
   statistic           = "Sum"
   threshold           = 0
   alarm_description   = "Firehose delivery to S3 failed"
+  treat_missing_data  = "notBreaching"
   dimensions = {
     DeliveryStreamName = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.name
   }
