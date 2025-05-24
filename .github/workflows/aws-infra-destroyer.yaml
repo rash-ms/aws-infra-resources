@@ -22,11 +22,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Debug environment values
+      - name: Print role ARN
         run: |
-          echo "ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}"
-          echo "ROLE_TO_ASSUME: ${{ secrets.ROLE_TO_ASSUME }}"
-
+          echo "Role ARN: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/${{ secrets.ROLE_TO_ASSUME }}"
+    
       - name: Configure AWS credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
