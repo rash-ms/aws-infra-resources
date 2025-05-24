@@ -21,6 +21,7 @@ jobs:
       working_dir: infras
       aws_default_region: us-east-1
       main_branch: main
+      selected_modules: cppv2-integration
     secrets:
       account_id:  ${{ secrets.ACCOUNT_ID }}
       role_to_assume: ${{ secrets.ROLE_TO_ASSUME }}
