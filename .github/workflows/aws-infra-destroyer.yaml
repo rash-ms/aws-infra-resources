@@ -18,11 +18,15 @@ jobs:
     name: Destroy Terraform Modules
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment_name }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Debug environment values
+        run: |
+          echo "ACCOUNT_ID: ${{ secrets.ACCOUNT_ID }}"
+          echo "ROLE_TO_ASSUME: ${{ secrets.ROLE_TO_ASSUME }}"
+      
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
