@@ -5,11 +5,10 @@ on:
     - '.github/workflows/aws-infra-deployer.yaml'
     - '.infras/**'
 
-
 jobs:
-  infra-nonprod-deployer:
-    name: Deploy Non-Prod Infra
-    uses: rash-ms/planet-workflow/.github/workflows/infra-deployer.yml@1.0.0
+  infra-resources-nonprod:
+    uses: rash-ms/planet-workflow/.github/workflows/terraform.yml@1.0.0
+    # uses: rash-ms/planet-workflow/.github/workflows/lit-terraform.yml@1.4.1
     permissions:
       id-token: write  
       contents: read   
@@ -24,12 +23,34 @@ jobs:
       main_branch: main
       selected_modules: cppv2-integration
     secrets:
-      account_id: ${{ secrets.ACCOUNT_ID }}
+      account_id:  ${{ secrets.ACCOUNT_ID }}
       role_to_assume: ${{ secrets.ROLE_TO_ASSUME }}
-      destroyer_token: ${{ secrets.DESTROYER_TOKEN }}
+      destroyer_token:  ${{ secrets.DESTROYER_TOKEN }}
       render_webhook_url: ${{ secrets.RENDER_WEBHOOK_URL }}
 
-  
+
+  infra-destroyer:
+    uses: rash-ms/planet-workflow/.github/workflows/terraform.yml@1.0.0
+    permissions:
+      id-token: write  
+      contents: read   
+    with:
+      version: 1.2.6
+      environment_plan: infra-resources-nonprod-protected
+      environment_apply: infra-resources-nonprod-protected
+      notify_environment: notify-auto-approval   
+      infra_dir: infra-resources-nonprod
+      working_dir: infras
+      aws_default_region: us-east-1
+      main_branch: main
+      selected_modules: cppv2-integration
+    secrets:
+      account_id:  ${{ secrets.ACCOUNT_ID }}
+      role_to_assume: ${{ secrets.ROLE_TO_ASSUME }}
+      destroyer_token:  ${{ secrets.DESTROYER_TOKEN }}
+      render_webhook_url: ${{ secrets.RENDER_WEBHOOK_URL }}
+
+
   # infra-resources-prod:
   #   needs: infra-resources-nonprod
   #   uses: rash-ms/planet-workflow/.github/workflows/terraform.yml@1.0.0
