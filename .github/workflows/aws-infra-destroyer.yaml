@@ -21,17 +21,23 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Print role ARN
-        run: |
-          echo "Role ARN: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/${{ secrets.ROLE_TO_ASSUME }}"
     
-      - name: Configure AWS credentials using OIDC
+      - name: Try OIDC AWS auth (ignore failure)
+        id: oidc_auth
+        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v2
         with:
           role-to-assume: arn:aws:iam::${{ secrets.ACCOUNT_ID }}:role/${{ secrets.ROLE_TO_ASSUME }}
           aws-region: us-east-1
-
+    
+      - name: Fallback to AWS access keys if OIDC failed
+        if: steps.oidc_auth.outcome == 'failure'
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+            
       - uses: hashicorp/setup-terraform@v3
         name: Setup Terraform
         with:
