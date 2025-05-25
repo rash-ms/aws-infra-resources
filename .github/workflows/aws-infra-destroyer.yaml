@@ -52,7 +52,8 @@ jobs:
 
           for infra_dir in "${infra_dirs[@]}"; do
               module=$(basename "$infra_dir")
-              echo "\n Destroying module: $infra_dir"
+
+              echo -e "-------------\n \033[35m Destroying Module: $infra_dir \033[0m \n -------------"
 
               cd "infras/terraform/$module" || {
                 echo "Module not found: infras/terraform/$module"
