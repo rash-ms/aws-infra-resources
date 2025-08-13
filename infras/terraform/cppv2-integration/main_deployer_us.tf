@@ -54,6 +54,25 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
         ]
       },
 
+      # TEST SQS-LAMBDA IAM
+      {
+        Effect = "Allow",
+        Action = [
+          "sqs:SendMessage"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect : "Allow",
+        Action : [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:ChangeMessageVisibility"
+        ],
+        Resource = "*"
+      },
+
       # Firehose PutRecord from EventBridge
       {
         Effect = "Allow",
