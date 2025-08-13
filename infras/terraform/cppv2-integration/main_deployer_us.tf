@@ -47,8 +47,8 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
         ],
         Resource = [
           "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn}",
-          "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn}",
-          "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn}"
+          # "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn}",
+          # "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn}"
         ]
       },
 
@@ -61,8 +61,8 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
         ],
         Resource = [
           aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn,
-          aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn,
-          aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_ap.arn
+          # aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn,
+          # aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_ap.arn
         ]
       },
 
@@ -99,14 +99,14 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
         ],
         Resource = [
           "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_us.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_eu.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_ap.arn}:*",
+          # "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_eu.arn}:*",
+          # "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_ap.arn}:*",
           "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_eu.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap.arn}:*",
+          # "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_eu.arn}:*",
+          # "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap.arn}:*",
           "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_us.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_eu.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_ap.arn}:*"
+          # "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_eu.arn}:*",
+          # "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_ap.arn}:*"
         ]
       }
     ]
@@ -208,13 +208,6 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
   passthrough_behavior = "WHEN_NO_TEMPLATES"
-
-  #   request_templates = {
-  #     "application/json" = templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
-  #       event_bus_arn = local.route_configs["us"].event_bus
-  #       detail_type   = local.route_configs["us"].route_path
-  #     })
-  #   }
 
   request_templates = {
     "application/json" = <<EOF
