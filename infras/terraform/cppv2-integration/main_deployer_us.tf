@@ -567,19 +567,19 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_4xx_errors_us" {
 }
 
 # Filter "MalformedDetail" on EventBridge
-resource "aws_cloudwatch_log_metric_filter" "userplatform_cpp_eventbridge_metric_filter_us" {
-  provider       = aws.us
-  name           = "Userplatform-CPP-MalformedDetailFiltered-US"
-  log_group_name = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id}/${aws_api_gateway_stage.userplatform_cpp_api_stage_us.stage_name}"
-  pattern        = "\"MalformedDetail\""
-
-  metric_transformation {
-    name          = "MalformedEvents"
-    namespace     = "EventBridge/Custom"
-    value         = "1"
-    default_value = 0
-  }
-}
+# resource "aws_cloudwatch_log_metric_filter" "userplatform_cpp_eventbridge_metric_filter_us" {
+#   provider       = aws.us
+#   name           = "Userplatform-CPP-MalformedDetailFiltered-US"
+#   log_group_name = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id}/${aws_api_gateway_stage.userplatform_cpp_api_stage_us.stage_name}"
+#   pattern        = "\"MalformedDetail\""
+#
+#   metric_transformation {
+#     name          = "MalformedEvents"
+#     namespace     = "EventBridge/Custom"
+#     value         = "1"
+#     default_value = 0
+#   }
+# }
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_malformed_eventbridge_events_us" {
   provider            = aws.us
