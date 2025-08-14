@@ -86,7 +86,8 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
         Effect = "Allow",
         Action = [
           "firehose:PutRecord",
-          "firehose:PutRecordBatch"
+          "firehose:PutRecordBatch",
+          "firehose:DescribeDeliveryStream"
         ],
         Resource = [
           aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn,
@@ -262,18 +263,6 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
 
   # Action=SendMessage&MessageBody=$util.urlEncode($util.toJson($envelope))
   # Action=SendMessage&Version=2012-11-05&MessageBody=$util.urlEncode($util.toJson($envelope))
-
-  # request_templates = {
-  #   "application/json" = <<EOF
-  # #set($envelope = {
-  #   "source": "cpp-api-streamhook",
-  #   "receivedAt": $context.requestTimeEpoch,
-  #   "requestId": $context.requestId,
-  #   "payload": "$util.escapeJavaScript($input.body)"
-  # })
-  # Action=SendMessage&Version=2012-11-05&MessageBody=$util.urlEncode($util.toJson($envelope))
-  # EOF
-  # }
 
   #   request_templates = {
   #     "application/json" = <<EOF
