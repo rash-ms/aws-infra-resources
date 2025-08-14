@@ -244,6 +244,12 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
   passthrough_behavior = "WHEN_NO_TEMPLATES"
 
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
+  }
+
+  # Action=SendMessage&Version=2012-11-05&MessageBody=$util.urlEncode($util.toJson($envelope))
+
   request_templates = {
     "application/json" = <<EOF
   #set($envelope = {
