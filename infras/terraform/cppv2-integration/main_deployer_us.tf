@@ -148,11 +148,11 @@ resource "aws_sqs_queue_policy" "allow_apigw_sqs_role" {
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Sid: "AllowAPIGWRoleSendMessage",
-      Effect: "Allow",
-      Principal: { AWS: aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn },
-      Action: "sqs:SendMessage",
-      Resource: data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn
+      Sid : "AllowAPIGWRoleSendMessage",
+      Effect : "Allow",
+      Principal : { AWS : aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn },
+      Action : "sqs:SendMessage",
+      Resource : data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn
     }]
   })
 }
