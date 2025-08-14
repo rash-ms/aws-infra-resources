@@ -90,27 +90,6 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
   })
 }
 
-
-resource "aws_sqs_queue_policy" "allow_apigw_sqs_role" {
-  queue_url = data.aws_sqs_queue.userplatform_cppv2_sqs_us.url
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Sid : "AllowAPIGWRoleSendMessage",
-      Effect : "Allow",
-      Principal : { AWS : aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn },
-      Action : "sqs:SendMessage",
-      Resource : data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn
-    }]
-  })
-}
-
-
-resource "aws_iam_role_policy_attachment" "userplatform_cpp_chatbot_attach" {
-  role       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.name
-  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
-}
-
 resource "aws_iam_role" "userplatform_cpp_api_gateway_cloudwatch_logging_role" {
   name = "userplatform_cpp_api_gateway_cloudwatch_logging_role"
   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
@@ -326,10 +305,6 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
     }))
   }
 
-  # triggers = {
-  #   redeploy = sha1(jsonencode(aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates))
-  # }
-
   lifecycle {
     create_before_destroy = true
   }
@@ -403,41 +378,10 @@ resource "aws_cloudwatch_log_group" "userplatform_cpp_api_gateway_logs_us" {
   retention_in_days = 7
 }
 
-resource "aws_cloudwatch_log_group" "userplatform_cpp_event_bus_logs_us" {
-  provider          = aws.us
-  name              = "/aws/events/userplatform_cpp_event_bus_logs_us"
-  retention_in_days = 7
-}
-
 resource "aws_cloudwatch_log_group" "userplatform_cpp_firehose_to_s3_us" {
   provider          = aws.us
   name              = "/aws/kinesisfirehose/userplatform_cpp_firehose_to_s3_us"
   retention_in_days = 7
-}
-
-## --------------------------------------------------
-## EVENTBRIDGE RESOURCES
-## --------------------------------------------------
-## This section provisions EventBridge components such as:
-## - Custom event buses (regional)
-## - Rules for routing and filtering events
-## - Event targets (Firehose, Logs, etc.)
-## --------------------------------------------------
-
-resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_us" {
-  provider = aws.us
-  name     = "userplatform_cpp_event_bus_us"
-}
-
-resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_rule_us" {
-  provider       = aws.us
-  name           = "userplatform_cpp_eventbridge_to_firehose_rule_us"
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
-
-  event_pattern = jsonencode({
-    "source" : ["cpp-api-streamhook"]
-  })
-
 }
 
 ## --------------------------------------------------
@@ -506,21 +450,6 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   }
 }
 
-resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_us" {
-  provider       = aws.us
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
-  arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn
-  role_arn       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
-}
-
-resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target_us" {
-  provider       = aws.us
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
-  arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us.arn
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
-  depends_on     = [aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us]
-}
 
 ## --------------------------------------------------
 ## CLOUDWATCH MONITORING RESOURCES
@@ -568,21 +497,6 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_4xx_errors_us" {
   treat_missing_data  = "notBreaching"
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
-
-# Filter "MalformedDetail" on EventBridge
-# resource "aws_cloudwatch_log_metric_filter" "userplatform_cpp_eventbridge_metric_filter_us" {
-#   provider       = aws.us
-#   name           = "Userplatform-CPP-MalformedDetailFiltered-US"
-#   log_group_name = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id}/${aws_api_gateway_stage.userplatform_cpp_api_stage_us.stage_name}"
-#   pattern        = "\"MalformedDetail\""
-#
-#   metric_transformation {
-#     name          = "MalformedEvents"
-#     namespace     = "EventBridge/Custom"
-#     value         = "1"
-#     default_value = 0
-#   }
-# }
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_malformed_eventbridge_events_us" {
   provider            = aws.us
