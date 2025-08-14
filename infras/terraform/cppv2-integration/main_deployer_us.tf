@@ -142,6 +142,22 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
   })
 }
 
+
+resource "aws_sqs_queue_policy" "allow_apigw_sqs_role" {
+  queue_url = data.aws_sqs_queue.userplatform_cppv2_sqs_us.url
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Sid: "AllowAPIGWRoleSendMessage",
+      Effect: "Allow",
+      Principal: { AWS: aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn },
+      Action: "sqs:SendMessage",
+      Resource: data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn
+    }]
+  })
+}
+
+
 resource "aws_iam_role_policy_attachment" "userplatform_cpp_chatbot_attach" {
   role       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.name
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
