@@ -126,17 +126,7 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ],
-        Resource = [
-          "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_us.arn}:*",
-          # "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_eu.arn}:*",
-          # "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_ap.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us.arn}:*",
-          # "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_eu.arn}:*",
-          # "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_us.arn}:*",
-          # "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_eu.arn}:*",
-          # "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_ap.arn}:*"
-        ]
+        Resource = "*"
       }
     ]
   })
@@ -286,8 +276,19 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   # }
 
   request_templates = {
-    "application/json" = "Action=SendMessage&MessageBody=$input.body"
+    "application/json" = <<EOF
+#set($body = $input.body)  ## capture raw request body
+#set($envelope = {
+  "source": "cpp-api-streamhook",
+  "payload": $util.parseJson($body)  ## parse body into JSON so it’s embedded properly
+})
+Action=SendMessage&Version=2012-11-05&MessageBody=$util.urlEncode($util.toJson($envelope))
+EOF
   }
+
+  # request_templates = {
+  #   "application/json" = "Action=SendMessage&MessageBody=$input.body"
+  # }
 
 }
 
@@ -368,13 +369,6 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us,
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
   ]
-
-  #   triggers = {
-  #     redeploy_tmpt_changes = sha1(templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
-  #       event_bus_arn = local.route_configs["us"].event_bus
-  #       detail_type   = local.route_configs["us"].route_path
-  #     }))
-  #   }
 
   triggers = {
     redeploy = sha1(jsonencode({
