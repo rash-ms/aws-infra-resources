@@ -59,8 +59,8 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "sqs:ChangeMessageVisibilityBatch",
           "sqs:SetQueueAttributes"
         ],
-        Resource = "*"
-        # Resource : "${data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn}"
+        # Resource = "*"
+        Resource : "${data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn}"
       },
       {
         "Effect" : "Allow",
@@ -70,8 +70,8 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "sqs:GetQueueUrl",
           "sqs:ListQueues"
         ],
-        Resource = "*"
-        # Resource : "${data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn}"
+        # Resource = "*"
+        Resource : "${data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn}"
       },
 
       # Firehose PutRecord from EventBridge
