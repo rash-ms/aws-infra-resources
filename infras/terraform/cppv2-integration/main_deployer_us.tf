@@ -233,47 +233,47 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   integration_http_method = "POST"
   type                    = "AWS"
 
-  uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:events:path//"
-  credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  # uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:events:path//"
+  # credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
-  # uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
-  # credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
+  credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
   passthrough_behavior = "WHEN_NO_TEMPLATES"
 
-  #   request_templates = {
-  #     "application/json" = <<EOF
-  # #set($envelope = {
-  #   "source": "cpp-api-streamhook",
-  #   "receivedAt": $context.requestTimeEpoch,
-  #   "requestId": $context.requestId,
-  #   "payload": "$util.escapeJavaScript($input.body)"
-  # })
-  # Action=SendMessage&MessageBody=$util.urlEncode($util.toJson($envelope))
-  # EOF
-  #   }
-  # }
-
   request_templates = {
     "application/json" = <<EOF
-#set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-#set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-{
-  "Entries": [
-    {
-      "Source": "cpp-api-streamhook",
-      "DetailType": "${local.route_configs["us"].route_path}",
-      "Detail": "$util.escapeJavaScript($input.body)",
-      "EventBusName": "${local.route_configs["us"].event_bus}"
-    }
-  ]
-}
-EOF
+  #set($envelope = {
+    "source": "cpp-api-streamhook",
+    "receivedAt": $context.requestTimeEpoch,
+    "requestId": $context.requestId,
+    "payload": "$util.escapeJavaScript($input.body)"
+  })
+  Action=SendMessage&MessageBody=$util.urlEncode($util.toJson($envelope))
+  EOF
   }
 }
+
+#   request_templates = {
+#     "application/json" = <<EOF
+# #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+# #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+# {
+#   "Entries": [
+#     {
+#       "Source": "cpp-api-streamhook",
+#       "DetailType": "${local.route_configs["us"].route_path}",
+#       "Detail": "$util.escapeJavaScript($input.body)",
+#       "EventBusName": "${local.route_configs["us"].event_bus}"
+#     }
+#   ]
+# }
+# EOF
+#   }
+# }
 
 resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_us" {
   provider    = aws.us
@@ -360,8 +360,18 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   #   }
 
   triggers = {
-    redeploy = sha1(jsonencode(aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates))
+    redeploy = sha1(jsonencode({
+      request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates
+      uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
+      integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_us.integration_http_method
+      credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_us.credentials
+      passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior
+    }))
   }
+
+  # triggers = {
+  #   redeploy = sha1(jsonencode(aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates))
+  # }
 
   lifecycle {
     create_before_destroy = true
