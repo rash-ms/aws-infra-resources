@@ -277,12 +277,11 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
 
   request_templates = {
     "application/json" = <<EOF
-#set($body = $input.body)  ## capture raw request body
 #set($envelope = {
   "source": "cpp-api-streamhook",
-  "payload": $util.parseJson($body)  ## parse body into JSON so it’s embedded properly
+  "payload": $input.json('$')
 })
-Action=SendMessage&Version=2012-11-05&MessageBody=$util.urlEncode($util.toJson($envelope))
+Action=SendMessage&MessageBody=$util.urlEncode($util.toJson($envelope))
 EOF
   }
 
