@@ -39,41 +39,6 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
-
-      # EventBridge PutEvents (for API Gateway)
-      # TEST SQS-LAMBDA IAM
-      {
-        Effect = "Allow",
-        Action = [
-          "sqs:GetQueueUrl",
-          "sqs:ChangeMessageVisibility",
-          "sqs:ListDeadLetterSourceQueues",
-          "sqs:SendMessageBatch",
-          "sqs:PurgeQueue",
-          "sqs:ReceiveMessage",
-          "sqs:DeleteMessage",
-          "sqs:SendMessage",
-          "sqs:GetQueueAttributes",
-          "sqs:CreateQueue",
-          "sqs:ListQueueTags",
-          "sqs:ChangeMessageVisibilityBatch",
-          "sqs:SetQueueAttributes"
-        ],
-        # Resource = "*"
-        Resource : "${data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn}"
-      },
-      {
-        "Effect" : "Allow",
-        "Action" : "sqs:ListQueues",
-        # Resource = "*"
-        Action : [
-          "sqs:GetQueueUrl",
-          "sqs:ListQueues"
-        ],
-        # Resource = "*"
-        Resource : "${data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn}"
-      },
-
       # Firehose PutRecord from EventBridge
       {
         Effect = "Allow",
@@ -108,7 +73,6 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "arn:aws:s3:::${local.route_configs["eu"].bucket}/*",
           "arn:aws:s3:::${local.route_configs["ap"].bucket}",
           "arn:aws:s3:::${local.route_configs["ap"].bucket}/*"
-
         ]
       },
 
