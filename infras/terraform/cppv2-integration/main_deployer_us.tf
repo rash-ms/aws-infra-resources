@@ -41,18 +41,6 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
     Statement = [
 
       # EventBridge PutEvents (for API Gateway)
-      {
-        Effect = "Allow",
-        Action = [
-          "events:PutEvents"
-        ],
-        Resource = [
-          "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn}",
-          # "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn}",
-          # "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn}"
-        ]
-      },
-
       # TEST SQS-LAMBDA IAM
       {
         Effect = "Allow",
@@ -71,14 +59,19 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "sqs:ChangeMessageVisibilityBatch",
           "sqs:SetQueueAttributes"
         ],
-        # Resource = "*"
-        Resource = data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn
+        Resource = "*"
+        # Resource : "${data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn}"
       },
       {
         "Effect" : "Allow",
         "Action" : "sqs:ListQueues",
         # Resource = "*"
-        Resource = data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn
+        Action : [
+          "sqs:GetQueueUrl",
+          "sqs:ListQueues"
+        ],
+        Resource = "*"
+        # Resource : "${data.aws_sqs_queue.userplatform_cppv2_sqs_us.arn}"
       },
 
       # Firehose PutRecord from EventBridge
