@@ -24,7 +24,6 @@ resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
             "events.amazonaws.com",
             "firehose.amazonaws.com",
             "chatbot.amazonaws.com",
-
             "lambda.amazonaws.com"
           ]
         }
@@ -58,18 +57,25 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
       {
         Effect = "Allow",
         Action = [
-          "sqs:SendMessage"
+          "sqs:GetQueueUrl",
+          "sqs:ChangeMessageVisibility",
+          "sqs:ListDeadLetterSourceQueues",
+          "sqs:SendMessageBatch",
+          "sqs:PurgeQueue",
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:SendMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:CreateQueue",
+          "sqs:ListQueueTags",
+          "sqs:ChangeMessageVisibilityBatch",
+          "sqs:SetQueueAttributes"
         ],
         Resource = "*"
       },
       {
-        Effect : "Allow",
-        Action : [
-          "sqs:ReceiveMessage",
-          "sqs:DeleteMessage",
-          "sqs:GetQueueAttributes",
-          "sqs:ChangeMessageVisibility"
-        ],
+        "Effect" : "Allow",
+        "Action" : "sqs:ListQueues",
         Resource = "*"
       },
 
