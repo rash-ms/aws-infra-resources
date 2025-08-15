@@ -8,20 +8,20 @@
 ## - Trust relationships for service integrations
 ## --------------------------------------------------
 
-# data "aws_sqs_queue" "userplatform_cppv2_sqs_us" {
-#   provider = aws.us
-#   name     = "userplatform_cppv2_sqs_us"
-# }
-#
-# data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_us" {
-#   provider = aws.us
-#   name     = "userplatform_cppv2_sqs_dlq_us"
-# }
-#
-# data "aws_lambda_function" "cpv2_sqs_lambda_firehose_us" {
-#   provider = aws.us
-#   name     = "aws_lambda_function"
-# }
+data "aws_sqs_queue" "userplatform_cppv2_sqs_us" {
+  provider = aws.us
+  name     = "userplatform_cppv2_sqs_us"
+}
+
+data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_us" {
+  provider = aws.us
+  name     = "userplatform_cppv2_sqs_dlq_us"
+}
+
+data "aws_lambda_function" "cpv2_sqs_lambda_firehose_us" {
+  provider = aws.us
+  name     = "aws_lambda_function"
+}
 
 resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
   name = "cpp_integration_apigw_evtbridge_firehose_logs_role"
