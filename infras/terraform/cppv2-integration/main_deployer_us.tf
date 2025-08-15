@@ -8,6 +8,11 @@
 ## - Trust relationships for service integrations
 ## --------------------------------------------------
 
+data "aws_sqs_queue" "userplatform_cppv2_sqs_us" {
+  provider = aws.us
+  name     = "userplatform_cppv2_sqs_us"
+}
+
 resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
   name = "cpp_integration_apigw_evtbridge_firehose_logs_role"
   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
@@ -167,15 +172,6 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method_us" {
   api_key_required = true
 }
 
-
-
-
-data "aws_sqs_queue" "userplatform_cppv2_sqs_us" {
-  provider = aws.us
-  name     = "userplatform_cppv2_sqs_us"
-}
-
-
 resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   provider                = aws.us
   rest_api_id             = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
@@ -216,13 +212,13 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
 
 }
 
-
 resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_us" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
   resource_id = aws_api_gateway_resource.userplatform_cpp_api_resource_us.id
   http_method = aws_api_gateway_method.userplatform_cpp_api_method_us.http_method
-  status_code = "200"
+  # status_code = "200"
+  status_code = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us.status_code
 
   depends_on = [
     aws_api_gateway_integration.userplatform_cpp_api_integration_us,
@@ -563,18 +559,3 @@ resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_us" {
   provider = aws.us
   name     = "userplatform_cpp_firehose_failure_alert_topic_us"
 }
-
-# resource "aws_chatbot_slack_channel_configuration" "userplatform_cpp_firehose_alerts_to_slack" {
-#   configuration_name = "userplatform_cpp_firehose_alerts_to_slack"
-#   slack_channel_id   = var.slack_channel_id
-#   slack_team_id      = var.slack_workspace_id
-
-#   sns_topic_arns = [
-#     aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn,
-#     aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn,
-#     aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
-#   ]
-
-#   iam_role_arn  = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-#   logging_level = "ERROR"
-# }
