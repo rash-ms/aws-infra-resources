@@ -624,11 +624,11 @@ resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification" {
 resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_us" {
   provider = aws.us
   name     = "userplatform_cpp_firehose_failure_alert_topic_us"
-  policy   = data.aws_iam_policy_document.userplatform_cpp_topic_policy_document.json
+  policy   = data.aws_iam_policy_document.userplatform_cpp_topic_policy_document_us.json
 }
 
 
-data "aws_iam_policy_document" "userplatform_cpp_topic_policy_document" {
+data "aws_iam_policy_document" "userplatform_cpp_topic_policy_document_us" {
   statement {
     effect = "Allow"
 
