@@ -97,7 +97,7 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
 
       {
         Effect   = "Allow",
-        Action   = ["SNS:Publish"],
+        Action   = ["sns:Publish"],
         Resource = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
       },
       # CloudWatch Logs from API-Gateway, EventBridge Rule, Firehose
