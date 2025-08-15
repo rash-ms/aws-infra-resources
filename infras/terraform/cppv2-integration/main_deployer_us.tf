@@ -19,8 +19,8 @@ data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_us" {
 }
 
 data "aws_lambda_function" "cpv2_sqs_lambda_firehose_us" {
-  provider = aws.us
-  name     = "cppv2_sqs_lambda_firehose_us"
+  provider      = aws.us
+  function_name = "cppv2_sqs_lambda_firehose_us"
 }
 
 # Reference the existing bucket
