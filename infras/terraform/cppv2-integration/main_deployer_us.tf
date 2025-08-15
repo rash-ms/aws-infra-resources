@@ -42,7 +42,8 @@ resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
           Service = [
             "apigateway.amazonaws.com",
             "firehose.amazonaws.com",
-            "lambda.amazonaws.com"
+            "lambda.amazonaws.com",
+            "s3.amazonaws.com"
           ]
         }
       }
@@ -94,6 +95,11 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
         ]
       },
 
+      {
+        Effect   = "Allow",
+        Action   = ["SNS:Publish"],
+        Resource = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
+      },
       # CloudWatch Logs from API-Gateway, EventBridge Rule, Firehose
       {
         Effect = "Allow",
