@@ -429,8 +429,8 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
     role_arn   = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
     bucket_arn = "arn:aws:s3:::${local.route_configs["us"].bucket}"
 
-    buffering_size     = 5   # 5 MB
-    buffering_interval = 120 # 2 minutes
+    buffering_size     = 64  # 64 MB
+    buffering_interval = 300 # 5 minutes
     compression_format = "UNCOMPRESSED"
 
     cloudwatch_logging_options {
