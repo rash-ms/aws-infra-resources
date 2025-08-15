@@ -42,8 +42,7 @@ resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
           Service = [
             "apigateway.amazonaws.com",
             "firehose.amazonaws.com",
-            "lambda.amazonaws.com",
-            "s3.amazonaws.com"
+            "lambda.amazonaws.com"
           ]
         }
       }
@@ -93,12 +92,6 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "arn:aws:s3:::${local.route_configs["ap"].bucket}",
           "arn:aws:s3:::${local.route_configs["ap"].bucket}/*"
         ]
-      },
-
-      {
-        Effect   = "Allow",
-        Action   = ["sns:Publish"],
-        Resource = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
       },
       # CloudWatch Logs from API-Gateway, EventBridge Rule, Firehose
       {
@@ -609,16 +602,16 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible" {
   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
 
-# # Attach the SNS notification
-# resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification" {
-#   bucket = data.aws_s3_bucket.userplatform_bucket_us.id
-#
-#   topic {
-#     topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
-#     events        = ["s3:ObjectCreated:*"]
-#     filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
-#   }
-# }
+# Attach the SNS notification
+resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification" {
+  bucket = data.aws_s3_bucket.userplatform_bucket_us.id
+
+  topic {
+    topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
+  }
+}
 
 
 ## --------------------------------------------------
@@ -631,4 +624,26 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible" {
 resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_us" {
   provider = aws.us
   name     = "userplatform_cpp_firehose_failure_alert_topic_us"
+  policy   = data.aws_iam_policy_document.userplatform_cpp_topic_policy_document.json
+}
+
+
+data "aws_iam_policy_document" "userplatform_cpp_topic_policy_document" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["s3.amazonaws.com"]
+    }
+
+    actions   = ["SNS:Publish"]
+    resources = ["arn:aws:sns:*:*:userplatform_cpp_firehose_failure_alert_topic_us"]
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = [data.aws_s3_bucket.userplatform_bucket_us.arn]
+    }
+  }
 }
