@@ -426,9 +426,11 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   destination = "extended_s3"
 
   extended_s3_configuration {
-    role_arn           = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-    bucket_arn         = "arn:aws:s3:::${local.route_configs["us"].bucket}"
-    buffering_size     = 64
+    role_arn   = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+    bucket_arn = "arn:aws:s3:::${local.route_configs["us"].bucket}"
+
+    buffering_size     = 5   # 5 MB
+    buffering_interval = 120 # 2 minutes
     compression_format = "UNCOMPRESSED"
 
     cloudwatch_logging_options {
@@ -607,16 +609,16 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible" {
   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
 
-# Attach the SNS notification
-resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification" {
-  bucket = data.aws_s3_bucket.userplatform_bucket_us.id
-
-  topic {
-    topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
-    events        = ["s3:ObjectCreated:*"]
-    filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
-  }
-}
+# # Attach the SNS notification
+# resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification" {
+#   bucket = data.aws_s3_bucket.userplatform_bucket_us.id
+#
+#   topic {
+#     topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
+#     events        = ["s3:ObjectCreated:*"]
+#     filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
+#   }
+# }
 
 
 ## --------------------------------------------------
