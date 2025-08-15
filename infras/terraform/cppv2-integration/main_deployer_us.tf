@@ -13,6 +13,16 @@ data "aws_sqs_queue" "userplatform_cppv2_sqs_us" {
   name     = "userplatform_cppv2_sqs_us"
 }
 
+data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_us" {
+  provider = aws.us
+  name     = "userplatform_cppv2_sqs_dlq_us"
+}
+
+data "aws_lambda_function" "cpv2_sqs_lambda_firehose_us" {
+  provider = aws.us
+  name     = "aws_lambda_function"
+}
+
 resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
   name = "cpp_integration_apigw_evtbridge_firehose_logs_role"
   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
@@ -494,23 +504,25 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_4xx_errors_us" {
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
 
-resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_malformed_eventbridge_events_us" {
-  provider            = aws.us
-  alarm_name          = "Userplatform-CPP-EventBridge-MalformedEvents-Alarm-US"
-  alarm_description   = "Triggered Malformed Payload To EventBridge"
-  namespace           = "EventBridge/Custom"
-  metric_name         = "MalformedEvents"
-  statistic           = "Sum"
-  period              = 60 # 1 minutes
-  evaluation_periods  = 1
-  threshold           = 1
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  treat_missing_data  = "notBreaching"
 
-  alarm_actions = [
-    aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
-  ]
+
+# Lambda errors/throttles
+resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_us" {
+  provider            = aws.us
+  alarm_name          = "Userplatform-CPP-Lambda-Errors-US"
+  namespace           = "AWS/Lambda"
+  metric_name         = "Errors"
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  dimensions = {
+    FunctionName = data.aws_lambda_function.cpv2_sqs_lambda_firehose_us.function_name
+  }
+  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
+
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_no_data_24h_us" {
   provider    = aws.us
@@ -552,7 +564,6 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm_
 ## --------------------------------------------------
 ## This section provisions Alerting components such as:
 ## - SNS topics
-## - Slack for alert notifications
 ## --------------------------------------------------
 
 resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_us" {
