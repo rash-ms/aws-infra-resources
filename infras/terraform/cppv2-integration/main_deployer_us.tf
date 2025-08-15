@@ -13,15 +13,20 @@ data "aws_sqs_queue" "userplatform_cppv2_sqs_us" {
   name     = "userplatform_cppv2_sqs_us"
 }
 
-# data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_us" {
-#   provider = aws.us
-#   name     = "userplatform_cppv2_sqs_dlq_us"
-# }
-#
-# data "aws_lambda_function" "cpv2_sqs_lambda_firehose_us" {
-#   provider = aws.us
-#   name     = "aws_lambda_function"
-# }
+data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_us" {
+  provider = aws.us
+  name     = "userplatform_cppv2_sqs_dlq_us"
+}
+
+data "aws_lambda_function" "cpv2_sqs_lambda_firehose_us" {
+  provider = aws.us
+  name     = "aws_lambda_function"
+}
+
+# Reference the existing bucket
+data "aws_s3_bucket" "userplatform_bucket_us" {
+  bucket = local.route_configs["us"].bucket
+}
 
 resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
   name = "cpp_integration_apigw_evtbridge_firehose_logs_role"
@@ -431,7 +436,7 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
     }
 
     prefix              = "raw/cppv2-raw/source=!{partitionKeyFromQuery:source}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
-    error_output_prefix = "raw/cppv2-raw-errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
+    error_output_prefix = "raw/cppv2-raw-errors/firehose_put_failed/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
 
 
     processing_configuration {
@@ -508,22 +513,22 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_4xx_errors_us" {
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
 
-# # Lambda errors/throttles
-# resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_us" {
-#   provider            = aws.us
-#   alarm_name          = "Userplatform-CPP-Lambda-Errors-US"
-#   namespace           = "AWS/Lambda"
-#   metric_name         = "Errors"
-#   statistic           = "Sum"
-#   period              = 300
-#   evaluation_periods  = 1
-#   threshold           = 0
-#   comparison_operator = "GreaterThanThreshold"
-#   dimensions = {
-#     FunctionName = data.aws_lambda_function.cpv2_sqs_lambda_firehose_us.function_name
-#   }
-#   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
-# }
+# Lambda errors/throttles
+resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_us" {
+  provider            = aws.us
+  alarm_name          = "Userplatform-CPP-Lambda-Errors-US"
+  namespace           = "AWS/Lambda"
+  metric_name         = "Errors"
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  dimensions = {
+    FunctionName = data.aws_lambda_function.cpv2_sqs_lambda_firehose_us.function_name
+  }
+  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
+}
 
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_no_data_24h_us" {
@@ -560,6 +565,53 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm_
   }
   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
+
+resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_put_fail" {
+  alarm_name          = "Userplatform-CPP-Firehose-PutRecord-Failure-US"
+  namespace           = "AWS/Firehose"
+  metric_name         = "PutRecord.Failure"
+  statistic           = "Sum"
+  period              = 60
+  evaluation_periods  = 5
+  datapoints_to_alarm = 3
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  dimensions = {
+    DeliveryStreamName = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.name
+  }
+  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
+}
+
+
+resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible" {
+  alarm_name          = "Userplatform-CPP-DLQHasMessages-US"
+  namespace           = "AWS/SQS"
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 5
+  datapoints_to_alarm = 3
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  dimensions = {
+    QueueName = data.aws_sqs_queue.userplatform_cppv2_sqs_dlq_us.name
+  }
+  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
+}
+
+# Attach the SNS notification
+resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification" {
+  bucket = data.aws_s3_bucket.userplatform_bucket_us.id
+
+  topic {
+    topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
+  }
+}
+
 
 ## --------------------------------------------------
 ## ALERTING RESOURCES
