@@ -23,7 +23,8 @@ resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
             "apigateway.amazonaws.com",
             "events.amazonaws.com",
             "firehose.amazonaws.com",
-            "chatbot.amazonaws.com"
+            "chatbot.amazonaws.com",
+            "lambda.amazonaws.com"
           ]
         }
       }
