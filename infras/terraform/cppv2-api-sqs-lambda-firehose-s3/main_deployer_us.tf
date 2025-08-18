@@ -67,8 +67,8 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
         ],
         Resource = [
           aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn,
-          #   # aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn,
-          #   # aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_ap.arn
+          aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn,
+          aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_ap.arn
         ]
       },
 
@@ -198,7 +198,6 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   type                    = "AWS"
 
   # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
-  # uri = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
   uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
   credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
@@ -210,23 +209,9 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
     "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
   }
 
-  # Action=SendMessage&MessageBody=$util.urlEncode($util.toJson($envelope))
-  # Action=SendMessage&Version=2012-11-05&MessageBody=$util.urlEncode($util.toJson($envelope))
-
-  #   request_templates = {
-  #     "application/json" = <<EOF
-  # #set($envelope = {
-  #   "source": "cpp-api-streamhook",
-  #   "payload": $input.json('$')
-  # })
-  # Action=SendMessage&MessageBody=$util.urlEncode($util.toJson($envelope))
-  # EOF
-  #   }
-
   request_templates = {
     "application/json" = "Action=SendMessage&MessageBody=$input.body"
   }
-
 }
 
 resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_us" {
