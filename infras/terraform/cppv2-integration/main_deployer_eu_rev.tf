@@ -177,9 +177,9 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
   }
 
   depends_on = [
-    aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
-    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap,
-    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap
+    aws_api_gateway_integration.userplatform_cpp_api_integration_eu,
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_eu,
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu
   ]
 
 }
