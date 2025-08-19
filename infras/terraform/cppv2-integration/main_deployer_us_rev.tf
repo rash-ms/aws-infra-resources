@@ -112,46 +112,6 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
   })
 }
 
-# resource "aws_iam_role" "userplatform_cpp_api_gateway_cloudwatch_logging_role" {
-#   name = "userplatform_cpp_api_gateway_cloudwatch_logging_role"
-#   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
-#
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Action = "sts:AssumeRole",
-#         Principal = {
-#           Service = "apigateway.amazonaws.com"
-#         },
-#         Effect = "Allow"
-#       }
-#     ]
-#   })
-# }
-#
-# resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_cloudwatch_logging_policy" {
-#   name = "userplatform_cpp_api_gateway_cloudwatch_logging_policy"
-#   role = aws_iam_role.userplatform_cpp_api_gateway_cloudwatch_logging_role.id
-#
-#   policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [{
-#       Effect = "Allow",
-#       Action = [
-#         "logs:CreateLogGroup",
-#         "logs:CreateLogStream",
-#         "logs:PutLogEvents",
-#         "logs:DescribeLogGroups",
-#         "logs:DescribeLogStreams",
-#         "logs:GetLogEvents",
-#         "logs:FilterLogEvents"
-#       ],
-#       Resource = "*"
-#     }]
-#   })
-# }
-
 ## --------------------------------------------------
 ## API GATEWAY RESOURCES
 ## --------------------------------------------------
@@ -559,6 +519,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm_
 }
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_put_fail" {
+  provider            = aws.us
   alarm_name          = "Userplatform-CPP-Firehose-PutRecord-Failure-US"
   namespace           = "AWS/Firehose"
   metric_name         = "PutRecord.Failure"
@@ -577,6 +538,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_put_fail" {
 
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible" {
+  provider            = aws.us
   alarm_name          = "Userplatform-CPP-DLQHasMessages-US"
   namespace           = "AWS/SQS"
   metric_name         = "ApproximateNumberOfMessagesVisible"
@@ -595,7 +557,8 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible" {
 
 # Attach the SNS notification
 resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification" {
-  bucket = data.aws_s3_bucket.userplatform_bucket_us.id
+  provider = aws.us
+  bucket   = data.aws_s3_bucket.userplatform_bucket_us.id
 
   topic {
     topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
