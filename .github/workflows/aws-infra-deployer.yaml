@@ -8,7 +8,7 @@ on:
 jobs:
   infra-nonprod-deployer:
     name: Deploy Non-Prod Infra
-    uses: rash-ms/planet-workflow/.github/workflows/infra-deployer.yml@1.0.0  # 0.57
+    uses: rash-ms/planet-workflow/.github/workflows/infra-deployer.yml@1.0.0  # 0.1
     permissions:
       id-token: write  
       contents: read   
