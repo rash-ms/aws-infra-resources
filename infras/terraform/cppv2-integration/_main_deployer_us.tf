@@ -46,11 +46,12 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
         Action = [
           "events:PutEvents"
         ],
-        Resource = [
-          "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn}",
-          "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn}",
-          "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn}"
-        ]
+        Resource = "*"
+        # Resource = [
+        #   "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn}",
+        #   "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn}",
+        #   "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn}"
+        # ]
       },
 
       # Firehose PutRecord from EventBridge
@@ -79,15 +80,15 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "s3:PutObject",
           "s3:PutObjectAcl"
         ],
-        Resource = [
-          "arn:aws:s3:::${local.route_configs["us"].bucket}",
-          "arn:aws:s3:::${local.route_configs["us"].bucket}/*",
-          "arn:aws:s3:::${local.route_configs["eu"].bucket}",
-          "arn:aws:s3:::${local.route_configs["eu"].bucket}/*",
-          "arn:aws:s3:::${local.route_configs["ap"].bucket}",
-          "arn:aws:s3:::${local.route_configs["ap"].bucket}/*"
-
-        ]
+        Resource = "*"
+        # Resource = [
+        #   "arn:aws:s3:::${local.route_configs["us"].bucket}",
+        #   "arn:aws:s3:::${local.route_configs["us"].bucket}/*",
+        #   "arn:aws:s3:::${local.route_configs["eu"].bucket}",
+        #   "arn:aws:s3:::${local.route_configs["eu"].bucket}/*",
+        #   "arn:aws:s3:::${local.route_configs["ap"].bucket}",
+        #   "arn:aws:s3:::${local.route_configs["ap"].bucket}/*"
+        # ]
       },
 
       # CloudWatch Logs from API-Gateway, EventBridge Rule, Firehose
@@ -98,17 +99,18 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ],
-        Resource = [
-          "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_us.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_eu.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_ap.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_eu.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_us.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_eu.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_ap.arn}:*"
-        ]
+        Resource = "*"
+        # Resource = [
+        #   "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_us.arn}:*",
+        #   "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_eu.arn}:*",
+        #   "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_ap.arn}:*",
+        #   "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us.arn}:*",
+        #   "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_eu.arn}:*",
+        #   "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap.arn}:*",
+        #   "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_us.arn}:*",
+        #   "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_eu.arn}:*",
+        #   "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_ap.arn}:*"
+        # ]
       }
     ]
   })
