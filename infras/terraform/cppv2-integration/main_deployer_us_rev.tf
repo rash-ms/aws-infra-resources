@@ -100,7 +100,6 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents",
-
           "logs:DescribeLogGroups",
           "logs:DescribeLogStreams",
           "logs:GetLogEvents",
