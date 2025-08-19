@@ -18,7 +18,7 @@ data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_us" {
   name     = "userplatform_cppv2_sqs_dlq_us"
 }
 
-data "aws_lambda_function" "cpv2_sqs_lambda_firehose_us" {
+data "aws_lambda_function" "cppv2_sqs_lambda_firehose_us" {
   provider      = aws.us
   function_name = "cppv2_sqs_lambda_firehose_us"
 }
@@ -306,7 +306,6 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   lifecycle {
     create_before_destroy = true
   }
-
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_us" {
@@ -511,7 +510,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_us" {
   threshold           = 0
   comparison_operator = "GreaterThanThreshold"
   dimensions = {
-    FunctionName = data.aws_lambda_function.cpv2_sqs_lambda_firehose_us.function_name
+    FunctionName = data.aws_lambda_function.cppv2_sqs_lambda_firehose_us.function_name
   }
   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }

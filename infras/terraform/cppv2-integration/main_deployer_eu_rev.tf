@@ -20,7 +20,7 @@ data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_eu" {
   name     = "userplatform_cppv2_sqs_dlq_eu"
 }
 
-data "aws_lambda_function" "cpv2_sqs_lambda_firehose_eu" {
+data "aws_lambda_function" "cppv2_sqs_lambda_firehose_eu" {
   provider      = aws.eu
   function_name = "cppv2_sqs_lambda_firehose_eu"
 }
@@ -276,7 +276,8 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   extended_s3_configuration {
     role_arn           = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
     bucket_arn         = "arn:aws:s3:::${local.route_configs["eu"].bucket}"
-    buffering_size     = 64
+    buffering_size     = 64  # 64 MB
+    buffering_interval = 300 # 5 minutes
     compression_format = "UNCOMPRESSED"
 
     cloudwatch_logging_options {
@@ -377,7 +378,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_eu" {
   threshold           = 0
   comparison_operator = "GreaterThanThreshold"
   dimensions = {
-    FunctionName = data.aws_lambda_function.cpv2_sqs_lambda_firehose_eu.function_name
+    FunctionName = data.aws_lambda_function.cppv2_sqs_lambda_firehose_eu.function_name
   }
   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn]
 }
