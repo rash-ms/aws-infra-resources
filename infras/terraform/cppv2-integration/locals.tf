@@ -4,7 +4,7 @@ locals {
       region     = "us-east-1",
       route_path = var.route_path["us"],
       bucket     = var.userplatform_s3_bucket["us"],
-      # event_bus  = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn
+      event_bus  = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn
 
     },
     eu = {
