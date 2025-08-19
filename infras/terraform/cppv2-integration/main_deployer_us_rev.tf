@@ -222,10 +222,10 @@ resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_
   # status_code = "200"
   status_code = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us.status_code
 
-  # depends_on = [
-  #   aws_api_gateway_integration.userplatform_cpp_api_integration_us,
-  #   aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us
-  # ]
+  depends_on = [
+    aws_api_gateway_integration.userplatform_cpp_api_integration_us,
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us
+  ]
 
   response_parameters = {
     "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
@@ -297,15 +297,15 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
     }))
   }
 
-  lifecycle {
-    create_before_destroy = true
-  }
+  # lifecycle {
+  #   create_before_destroy = true
+  # }
 
-  # depends_on = [
-  #   aws_api_gateway_integration.userplatform_cpp_api_integration_us,
-  #   aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us,
-  #   aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
-  # ]
+  depends_on = [
+    aws_api_gateway_integration.userplatform_cpp_api_integration_us,
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us,
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
+  ]
 
 }
 
