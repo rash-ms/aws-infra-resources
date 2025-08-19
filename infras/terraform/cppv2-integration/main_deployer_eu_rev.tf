@@ -155,15 +155,21 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
   provider    = aws.eu
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id
 
+  # triggers = {
+  #   redeploy = sha1(jsonencode({
+  #     request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
+  #     request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
+  #     uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
+  #     integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
+  #     credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
+  #     passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
+  #   }))
+  # }
+
   triggers = {
-    redeploy = sha1(jsonencode({
-      request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
-      request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
-      uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
-      integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
-      credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
-      passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
-    }))
+    redeploy = "sqs-migration-${timestamp()}" # This will force a new deployment
+    # OR use a static value that you increment manually:
+    # redeploy = "sqs-migration-v2"
   }
 
   lifecycle {
