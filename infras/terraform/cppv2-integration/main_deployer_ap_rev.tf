@@ -26,9 +26,9 @@ data "aws_lambda_function" "cppv2_sqs_lambda_firehose_ap" {
 }
 
 # Reference the existing bucket
-data "aws_s3_bucket" "userplatform_bucket_ap" {
-  bucket = local.route_configs["ap"].bucket
-}
+# data "aws_s3_bucket" "userplatform_bucket_ap" {
+#   bucket = local.route_configs["ap"].bucket
+# }
 
 
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_ap" {
@@ -452,15 +452,15 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible_ap" {
 }
 
 # Attach the SNS notification
-resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_ap" {
-  bucket = data.aws_s3_bucket.userplatform_bucket_ap.id
-
-  topic {
-    topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
-    events        = ["s3:ObjectCreated:*"]
-    filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
-  }
-}
+# resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_ap" {
+#   bucket = data.aws_s3_bucket.userplatform_bucket_ap.id
+#
+#   topic {
+#     topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
+#     events        = ["s3:ObjectCreated:*"]
+#     filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
+#   }
+# }
 
 
 ## --------------------------------------------------------------
