@@ -1,13 +1,13 @@
-# ## --------------------------------------------------
-# ## IAM ROLES & POLICIES
-# ## --------------------------------------------------
-# ## This section provisions IAM components such as:
-# ## - Execution roles for API Gateway, EventBridge, and Firehose
-# ## - Policies granting PutEvents, PutRecord, and other actions
-# ## - Cross-region access roles
-# ## - Trust relationships for service integrations
-# ## --------------------------------------------------
-#
+## --------------------------------------------------
+## IAM ROLES & POLICIES
+## --------------------------------------------------
+## This section provisions IAM components such as:
+## - Execution roles for API Gateway, EventBridge, and Firehose
+## - Policies granting PutEvents, PutRecord, and other actions
+## - Cross-region access roles
+## - Trust relationships for service integrations
+## --------------------------------------------------
+
 # data "aws_sqs_queue" "userplatform_cppv2_sqs_us" {
 #   provider = aws.us
 #   name     = "userplatform_cppv2_sqs_us"
@@ -27,90 +27,90 @@
 # data "aws_s3_bucket" "userplatform_bucket_us" {
 #   bucket = local.route_configs["us"].bucket
 # }
-#
-# resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
-#   name = "cpp_integration_apigw_evtbridge_firehose_logs_role"
-#   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
-#
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17"
-#     Statement = [
-#       {
-#         Action = "sts:AssumeRole"
-#         Effect = "Allow"
-#         Principal = {
-#           Service = [
-#             "apigateway.amazonaws.com",
-#             "firehose.amazonaws.com",
-#             "lambda.amazonaws.com"
-#           ]
-#         }
-#       }
-#     ]
-#   })
-# }
-#
-# resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_policy" {
-#   name = "cpp_integration_apigw_evtbridge_firehose_logs_policy"
-#   role = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.id
-#
-#   policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       # Firehose PutRecord from EventBridge
-#       {
-#         Effect = "Allow",
-#         Action = [
-#           "firehose:PutRecord",
-#           "firehose:PutRecordBatch",
-#           "firehose:DescribeDeliveryStream"
-#         ],
-#         Resource = [
-#           aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn,
-#           # aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn,
-#           # aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_ap.arn
-#         ]
-#       },
-#
-#       # Firehose Access to S3
-#       {
-#         Effect = "Allow",
-#         Action = [
-#           "s3:AbortMultipartUpload",
-#           "s3:GetBucketLocation",
-#           "s3:GetObject",
-#           "s3:ListBucket",
-#           "s3:ListBucketMultipartUploads",
-#           "s3:PutObject",
-#           "s3:PutObjectAcl"
-#         ],
-#         Resource = [
-#           "arn:aws:s3:::${local.route_configs["us"].bucket}",
-#           "arn:aws:s3:::${local.route_configs["us"].bucket}/*",
-#           "arn:aws:s3:::${local.route_configs["eu"].bucket}",
-#           "arn:aws:s3:::${local.route_configs["eu"].bucket}/*",
-#           "arn:aws:s3:::${local.route_configs["ap"].bucket}",
-#           "arn:aws:s3:::${local.route_configs["ap"].bucket}/*"
-#         ]
-#       },
-#       # CloudWatch Logs from API-Gateway, EventBridge Rule, Firehose
-#       {
-#         Effect = "Allow",
-#         Action = [
-#           "logs:CreateLogGroup",
-#           "logs:CreateLogStream",
-#           "logs:PutLogEvents",
-#
-#           "logs:DescribeLogGroups",
-#           "logs:DescribeLogStreams",
-#           "logs:GetLogEvents",
-#           "logs:FilterLogEvents"
-#         ],
-#         Resource = "*"
-#       }
-#     ]
-#   })
-# }
+
+resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
+  name = "cpp_integration_apigw_evtbridge_firehose_logs_role"
+  # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = [
+            "apigateway.amazonaws.com",
+            "firehose.amazonaws.com",
+            "lambda.amazonaws.com"
+          ]
+        }
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_policy" {
+  name = "cpp_integration_apigw_evtbridge_firehose_logs_policy"
+  role = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      # Firehose PutRecord from EventBridge
+      {
+        Effect = "Allow",
+        Action = [
+          "firehose:PutRecord",
+          "firehose:PutRecordBatch",
+          "firehose:DescribeDeliveryStream"
+        ],
+        Resource = [
+          # aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn,
+          # aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn,
+          aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_ap.arn
+        ]
+      },
+
+      # Firehose Access to S3
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:AbortMultipartUpload",
+          "s3:GetBucketLocation",
+          "s3:GetObject",
+          "s3:ListBucket",
+          "s3:ListBucketMultipartUploads",
+          "s3:PutObject",
+          "s3:PutObjectAcl"
+        ],
+        Resource = [
+          "arn:aws:s3:::${local.route_configs["us"].bucket}",
+          "arn:aws:s3:::${local.route_configs["us"].bucket}/*",
+          "arn:aws:s3:::${local.route_configs["eu"].bucket}",
+          "arn:aws:s3:::${local.route_configs["eu"].bucket}/*",
+          "arn:aws:s3:::${local.route_configs["ap"].bucket}",
+          "arn:aws:s3:::${local.route_configs["ap"].bucket}/*"
+        ]
+      },
+      # CloudWatch Logs from API-Gateway, EventBridge Rule, Firehose
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:GetLogEvents",
+          "logs:FilterLogEvents"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
 #
 # ## --------------------------------------------------
 # ## API GATEWAY RESOURCES
