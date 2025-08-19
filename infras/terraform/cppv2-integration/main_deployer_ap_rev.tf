@@ -286,7 +286,7 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
       enabled = "true"
     }
 
-    prefix              = "raw/cpp-v2-raw-/source=!{partitionKeyFromQuery:source}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
+    prefix              = "raw/cpp-v2-raw/source=!{partitionKeyFromQuery:source}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
     error_output_prefix = "raw/cpp-v2-raw-errors/firehose_delivery_failures/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
 
     processing_configuration {
