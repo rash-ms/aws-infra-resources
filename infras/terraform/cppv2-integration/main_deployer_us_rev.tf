@@ -222,10 +222,10 @@ resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_
   # status_code = "200"
   status_code = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us.status_code
 
-  depends_on = [
-    aws_api_gateway_integration.userplatform_cpp_api_integration_us,
-    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us
-  ]
+  # depends_on = [
+  #   aws_api_gateway_integration.userplatform_cpp_api_integration_us,
+  #   aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us
+  # ]
 
   response_parameters = {
     "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
@@ -286,12 +286,6 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
 
-  depends_on = [
-    aws_api_gateway_integration.userplatform_cpp_api_integration_us,
-    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us,
-    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
-  ]
-
   triggers = {
     redeploy = sha1(jsonencode({
       request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates
@@ -306,6 +300,13 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   lifecycle {
     create_before_destroy = true
   }
+
+  # depends_on = [
+  #   aws_api_gateway_integration.userplatform_cpp_api_integration_us,
+  #   aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us,
+  #   aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
+  # ]
+
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_us" {
