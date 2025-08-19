@@ -155,12 +155,6 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
   provider    = aws.ap
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
 
-  depends_on = [
-    aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
-    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap,
-    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap
-  ]
-
   triggers = {
     redeploy = sha1(jsonencode({
       request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_templates
@@ -171,9 +165,17 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
       passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.passthrough_behavior
     }))
   }
+
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [
+    aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap,
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap
+  ]
+
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {
