@@ -26,9 +26,9 @@ data "aws_lambda_function" "cppv2_sqs_lambda_firehose_eu" {
 }
 
 # Reference the existing bucket
-data "aws_s3_bucket" "userplatform_bucket_eu" {
-  bucket = local.route_configs["eu"].bucket
-}
+# data "aws_s3_bucket" "userplatform_bucket_eu" {
+#   bucket = local.route_configs["eu"].bucket
+# }
 
 
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_eu" {
@@ -463,16 +463,16 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible_eu" {
 }
 
 # Attach the SNS notification
-resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_eu" {
-  provider = aws.eu
-  bucket   = data.aws_s3_bucket.userplatform_bucket_eu.id
-
-  topic {
-    topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn
-    events        = ["s3:ObjectCreated:*"]
-    filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
-  }
-}
+# resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_eu" {
+#   provider = aws.eu
+#   bucket   = data.aws_s3_bucket.userplatform_bucket_eu.id
+#
+#   topic {
+#     topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn
+#     events        = ["s3:ObjectCreated:*"]
+#     filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
+#   }
+# }
 
 
 ## --------------------------------------------------------------
