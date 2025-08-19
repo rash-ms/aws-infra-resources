@@ -168,11 +168,17 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
 
   triggers = {
     # redeploy = "sqs-migration-${timestamp()}" # This will force a new deployment
-    redeploy = "sqs-migration-v2"  # Simple static value
+    redeploy = "sqs-migration-v2" # Simple static value
   }
 
+  # lifecycle {
+  #   create_before_destroy = true
+  # }
+
   lifecycle {
-    create_before_destroy = true
+    replace_triggered_by = [
+      aws_api_gateway_integration.userplatform_cpp_api_integration_ap
+    ]
   }
 
   # depends_on = [
