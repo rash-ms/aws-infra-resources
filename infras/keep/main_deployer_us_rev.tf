@@ -8,6 +8,26 @@
 ## - Trust relationships for service integrations
 ## --------------------------------------------------
 
+data "aws_sqs_queue" "userplatform_cppv2_sqs_us" {
+  provider = aws.us
+  name     = "userplatform_cppv2_sqs_us"
+}
+
+data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_us" {
+  provider = aws.us
+  name     = "userplatform_cppv2_sqs_dlq_us"
+}
+
+data "aws_lambda_function" "cppv2_sqs_lambda_firehose_us" {
+  provider      = aws.us
+  function_name = "cppv2_sqs_lambda_firehose_us"
+}
+
+# Reference the existing bucket
+data "aws_s3_bucket" "userplatform_bucket_us" {
+  bucket = local.route_configs["us"].bucket
+}
+
 resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
   name = "cpp_integration_apigw_evtbridge_firehose_logs_role"
   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
@@ -21,9 +41,7 @@ resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
         Principal = {
           Service = [
             "apigateway.amazonaws.com",
-            "events.amazonaws.com",
             "firehose.amazonaws.com",
-            "chatbot.amazonaws.com",
             "lambda.amazonaws.com"
           ]
         }
@@ -39,26 +57,13 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
-
-      # EventBridge PutEvents (for API Gateway)
-      {
-        Effect = "Allow",
-        Action = [
-          "events:PutEvents"
-        ],
-        Resource = [
-          "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn}",
-          "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn}",
-          "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn}"
-        ]
-      },
-
       # Firehose PutRecord from EventBridge
       {
         Effect = "Allow",
         Action = [
           "firehose:PutRecord",
-          "firehose:PutRecordBatch"
+          "firehose:PutRecordBatch",
+          "firehose:DescribeDeliveryStream"
         ],
         Resource = [
           aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn,
@@ -86,76 +91,23 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "arn:aws:s3:::${local.route_configs["eu"].bucket}/*",
           "arn:aws:s3:::${local.route_configs["ap"].bucket}",
           "arn:aws:s3:::${local.route_configs["ap"].bucket}/*"
-
         ]
       },
-
       # CloudWatch Logs from API-Gateway, EventBridge Rule, Firehose
       {
         Effect = "Allow",
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:GetLogEvents",
+          "logs:FilterLogEvents"
         ],
-        Resource = [
-          "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_us.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_eu.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_ap.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_eu.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_us.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_eu.arn}:*",
-          "${aws_cloudwatch_log_group.userplatform_cpp_firehose_to_s3_ap.arn}:*"
-        ]
+        Resource = "*"
       }
     ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "userplatform_cpp_chatbot_attach" {
-  role       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.name
-  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
-}
-
-resource "aws_iam_role" "userplatform_cpp_api_gateway_cloudwatch_logging_role" {
-  name = "userplatform_cpp_api_gateway_cloudwatch_logging_role"
-  # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Action = "sts:AssumeRole",
-        Principal = {
-          Service = "apigateway.amazonaws.com"
-        },
-        Effect = "Allow"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy" "userplatform_cpp_api_gateway_cloudwatch_logging_policy" {
-  name = "userplatform_cpp_api_gateway_cloudwatch_logging_policy"
-  role = aws_iam_role.userplatform_cpp_api_gateway_cloudwatch_logging_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect = "Allow",
-      Action = [
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:PutLogEvents",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams",
-        "logs:GetLogEvents",
-        "logs:FilterLogEvents"
-      ],
-      Resource = "*"
-    }]
   })
 }
 
@@ -203,28 +155,21 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   http_method             = aws_api_gateway_method.userplatform_cpp_api_method_us.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${local.route_configs["us"].region}:events:path//"
-  credentials             = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+
+  # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
+  uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
+  credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  passthrough_behavior = "WHEN_NO_TEMPLATES"
+  passthrough_behavior = "NEVER"
+
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
+  }
 
   request_templates = {
-    "application/json" = <<EOF
-#set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-#set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-{
-  "Entries": [
-    {
-      "Source": "cpp-api-streamhook",
-      "DetailType": "${local.route_configs["us"].route_path}",
-      "Detail": "$util.escapeJavaScript($input.body)",
-      "EventBusName": "${local.route_configs["us"].event_bus}"
-    }
-  ]
-}
-EOF
+    "application/json" = "Action=SendMessage&MessageBody=$input.body"
   }
 }
 
@@ -233,7 +178,8 @@ resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
   resource_id = aws_api_gateway_resource.userplatform_cpp_api_resource_us.id
   http_method = aws_api_gateway_method.userplatform_cpp_api_method_us.http_method
-  status_code = "200"
+  # status_code = "200"
+  status_code = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us.status_code
 
   depends_on = [
     aws_api_gateway_integration.userplatform_cpp_api_integration_us,
@@ -299,18 +245,33 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
 
+  triggers = {
+    redeploy = sha1(jsonencode({
+      request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates
+      request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_parameters
+      uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
+      integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_us.integration_http_method
+      credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_us.credentials
+      passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior
+    }))
+  }
+
+  # triggers = {
+  #   redeploy = "sqs-migration-${timestamp()}" # This will force a new deployment
+  #   # OR use a static value that you increment manually:
+  #   # redeploy = "sqs-migration-v2"
+  # }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
   depends_on = [
     aws_api_gateway_integration.userplatform_cpp_api_integration_us,
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us,
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
   ]
 
-  #   triggers = {
-  #     redeploy_tmpt_changes = sha1(templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
-  #       event_bus_arn = local.route_configs["us"].event_bus
-  #       detail_type   = local.route_configs["us"].route_path
-  #     }))
-  #   }
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_us" {
@@ -362,8 +323,9 @@ resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_s
 }
 
 resource "aws_api_gateway_account" "userplatform_cpp_api_account_settings_us" {
-  provider            = aws.us
-  cloudwatch_role_arn = aws_iam_role.userplatform_cpp_api_gateway_cloudwatch_logging_role.arn
+  provider = aws.us
+  # cloudwatch_role_arn = aws_iam_role.userplatform_cpp_api_gateway_cloudwatch_logging_role.arn
+  cloudwatch_role_arn = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
 }
 
@@ -380,41 +342,10 @@ resource "aws_cloudwatch_log_group" "userplatform_cpp_api_gateway_logs_us" {
   retention_in_days = 7
 }
 
-resource "aws_cloudwatch_log_group" "userplatform_cpp_event_bus_logs_us" {
-  provider          = aws.us
-  name              = "/aws/events/userplatform_cpp_event_bus_logs_us"
-  retention_in_days = 7
-}
-
 resource "aws_cloudwatch_log_group" "userplatform_cpp_firehose_to_s3_us" {
   provider          = aws.us
   name              = "/aws/kinesisfirehose/userplatform_cpp_firehose_to_s3_us"
   retention_in_days = 7
-}
-
-## --------------------------------------------------
-## EVENTBRIDGE RESOURCES
-## --------------------------------------------------
-## This section provisions EventBridge components such as:
-## - Custom event buses (regional)
-## - Rules for routing and filtering events
-## - Event targets (Firehose, Logs, etc.)
-## --------------------------------------------------
-
-resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_us" {
-  provider = aws.us
-  name     = "userplatform_cpp_event_bus_us"
-}
-
-resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_rule_us" {
-  provider       = aws.us
-  name           = "userplatform_cpp_eventbridge_to_firehose_rule_us"
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
-
-  event_pattern = jsonencode({
-    "source" : ["cpp-api-streamhook"]
-  })
-
 }
 
 ## --------------------------------------------------
@@ -438,9 +369,11 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   destination = "extended_s3"
 
   extended_s3_configuration {
-    role_arn           = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-    bucket_arn         = "arn:aws:s3:::${local.route_configs["us"].bucket}"
-    buffering_size     = 64
+    role_arn   = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+    bucket_arn = "arn:aws:s3:::${local.route_configs["us"].bucket}"
+
+    buffering_size     = 64  # 64 MB
+    buffering_interval = 300 # 5 minutes
     compression_format = "UNCOMPRESSED"
 
     cloudwatch_logging_options {
@@ -453,8 +386,8 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
       enabled = "true"
     }
 
-    prefix              = "raw/cppv2-raw/source=!{partitionKeyFromQuery:source}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
-    error_output_prefix = "raw/cppv2-raw-errors/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
+    prefix              = "raw/cpp-v2-raw/source=!{partitionKeyFromQuery:source}/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/"
+    error_output_prefix = "raw/cpp-v2-raw-errors/firehose_delivery_failures/year=!{timestamp:yyyy}/month=!{timestamp:MM}/day=!{timestamp:dd}/hour=!{timestamp:HH}/!{firehose:error-output-type}/"
 
 
     processing_configuration {
@@ -483,21 +416,6 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   }
 }
 
-resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_us" {
-  provider       = aws.us
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
-  arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn
-  role_arn       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
-}
-
-resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target_us" {
-  provider       = aws.us
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
-  arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us.arn
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
-  depends_on     = [aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us]
-}
 
 ## --------------------------------------------------
 ## CLOUDWATCH MONITORING RESOURCES
@@ -546,38 +464,23 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_4xx_errors_us" {
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
 
-# # Filter "MalformedDetail" on EventBridge
-# resource "aws_cloudwatch_log_metric_filter" "userplatform_cpp_eventbridge_metric_filter_us" {
-#   provider       = aws.us
-#   name           = "Userplatform-CPP-MalformedDetailFiltered-US"
-#   log_group_name = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id}/${aws_api_gateway_stage.userplatform_cpp_api_stage_us.stage_name}"
-#   pattern        = "\"MalformedDetail\""
-#
-#   metric_transformation {
-#     name          = "MalformedEvents"
-#     namespace     = "EventBridge/Custom"
-#     value         = "1"
-#     default_value = 0
-#   }
-# }
-
-resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_malformed_eventbridge_events_us" {
+# Lambda errors/throttles
+resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_us" {
   provider            = aws.us
-  alarm_name          = "Userplatform-CPP-EventBridge-MalformedEvents-Alarm-US"
-  alarm_description   = "Triggered Malformed Payload To EventBridge"
-  namespace           = "EventBridge/Custom"
-  metric_name         = "MalformedEvents"
+  alarm_name          = "Userplatform-CPP-Lambda-Errors-US"
+  namespace           = "AWS/Lambda"
+  metric_name         = "Errors"
   statistic           = "Sum"
-  period              = 60 # 1 minutes
+  period              = 300
   evaluation_periods  = 1
-  threshold           = 1
-  comparison_operator = "GreaterThanOrEqualToThreshold"
-  treat_missing_data  = "notBreaching"
-
-  alarm_actions = [
-    aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
-  ]
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  dimensions = {
+    FunctionName = data.aws_lambda_function.cppv2_sqs_lambda_firehose_us.function_name
+  }
+  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
+
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_no_data_24h_us" {
   provider    = aws.us
@@ -614,30 +517,86 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm_
   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
 
+resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_put_fail" {
+  provider            = aws.us
+  alarm_name          = "Userplatform-CPP-Firehose-PutRecord-Failure-US"
+  namespace           = "AWS/Firehose"
+  metric_name         = "PutRecord.Failure"
+  statistic           = "Sum"
+  period              = 60
+  evaluation_periods  = 5
+  datapoints_to_alarm = 3
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  dimensions = {
+    DeliveryStreamName = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.name
+  }
+  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
+}
+
+
+resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible" {
+  provider            = aws.us
+  alarm_name          = "Userplatform-CPP-DLQHasMessages-US"
+  namespace           = "AWS/SQS"
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 5
+  datapoints_to_alarm = 3
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  treat_missing_data  = "notBreaching"
+  dimensions = {
+    QueueName = data.aws_sqs_queue.userplatform_cppv2_sqs_dlq_us.name
+  }
+  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
+}
+
+# Attach the SNS notification
+resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification" {
+  provider = aws.us
+  bucket   = data.aws_s3_bucket.userplatform_bucket_us.id
+
+  topic {
+    topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
+  }
+}
+
+
 ## --------------------------------------------------
 ## ALERTING RESOURCES
 ## --------------------------------------------------
 ## This section provisions Alerting components such as:
 ## - SNS topics
-## - Slack for alert notifications
 ## --------------------------------------------------
 
 resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_us" {
   provider = aws.us
   name     = "userplatform_cpp_firehose_failure_alert_topic_us"
+  policy   = data.aws_iam_policy_document.userplatform_cpp_topic_policy_document_us.json
 }
 
-# resource "aws_chatbot_slack_channel_configuration" "userplatform_cpp_firehose_alerts_to_slack" {
-#   configuration_name = "userplatform_cpp_firehose_alerts_to_slack"
-#   slack_channel_id   = var.slack_channel_id
-#   slack_team_id      = var.slack_workspace_id
 
-#   sns_topic_arns = [
-#     aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn,
-#     aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn,
-#     aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
-#   ]
+data "aws_iam_policy_document" "userplatform_cpp_topic_policy_document_us" {
+  statement {
+    effect = "Allow"
 
-#   iam_role_arn  = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-#   logging_level = "ERROR"
-# }
+    principals {
+      type        = "Service"
+      identifiers = ["s3.amazonaws.com"]
+    }
+
+    actions   = ["SNS:Publish"]
+    resources = ["arn:aws:sns:*:*:userplatform_cpp_firehose_failure_alert_topic_us"]
+
+    condition {
+      test     = "ArnLike"
+      variable = "aws:SourceArn"
+      values   = [data.aws_s3_bucket.userplatform_bucket_us.arn]
+    }
+  }
+}
