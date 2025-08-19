@@ -426,6 +426,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm_
 
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_put_fail_eu" {
+  provider            = aws.eu
   alarm_name          = "Userplatform-CPP-Firehose-PutRecord-Failure-EU"
   namespace           = "AWS/Firehose"
   metric_name         = "PutRecord.Failure"
@@ -444,6 +445,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_put_fail_eu" {
 
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible_eu" {
+  provider            = aws.eu
   alarm_name          = "Userplatform-CPP-DLQHasMessages-EU"
   namespace           = "AWS/SQS"
   metric_name         = "ApproximateNumberOfMessagesVisible"
@@ -462,6 +464,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible_eu" {
 
 # Attach the SNS notification
 # resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_eu" {
+# provider            = aws.eu
 #   bucket = data.aws_s3_bucket.userplatform_bucket_eu.id
 #
 #   topic {

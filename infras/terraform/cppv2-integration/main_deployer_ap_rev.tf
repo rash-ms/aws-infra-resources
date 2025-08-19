@@ -427,6 +427,7 @@
 #
 #
 # resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_put_fail_ap" {
+#   provider            = aws.ap
 #   alarm_name          = "Userplatform-CPP-Firehose-PutRecord-Failure-AP"
 #   namespace           = "AWS/Firehose"
 #   metric_name         = "PutRecord.Failure"
@@ -445,6 +446,7 @@
 #
 #
 # resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible_ap" {
+#   provider            = aws.ap
 #   alarm_name          = "Userplatform-CPP-DLQHasMessages-AP"
 #   namespace           = "AWS/SQS"
 #   metric_name         = "ApproximateNumberOfMessagesVisible"
@@ -463,6 +465,7 @@
 #
 # # Attach the SNS notification
 # # resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_ap" {
+#   provider            = aws.ap
 # #   bucket = data.aws_s3_bucket.userplatform_bucket_ap.id
 # #
 # #   topic {
