@@ -20,7 +20,7 @@ data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_ap" {
   name     = "userplatform_cppv2_sqs_dlq_ap"
 }
 
-data "aws_lambda_function" "cpv2_sqs_lambda_firehose_ap" {
+data "aws_lambda_function" "cppv2_sqs_lambda_firehose_ap" {
   provider      = aws.ap
   function_name = "cppv2_sqs_lambda_firehose_ap"
 }
@@ -374,7 +374,7 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_ap" {
   threshold           = 0
   comparison_operator = "GreaterThanThreshold"
   dimensions = {
-    FunctionName = data.aws_lambda_function.cpv2_sqs_lambda_firehose_ap.function_name
+    FunctionName = data.aws_lambda_function.cppv2_sqs_lambda_firehose_ap.function_name
   }
   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn]
 }
