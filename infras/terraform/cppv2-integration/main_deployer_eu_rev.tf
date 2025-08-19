@@ -171,7 +171,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
       passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
     }))
   }
-    lifecycle {
+  lifecycle {
     create_before_destroy = true
   }
 }

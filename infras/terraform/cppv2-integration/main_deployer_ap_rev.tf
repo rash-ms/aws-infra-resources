@@ -65,7 +65,7 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_ap" {
   integration_http_method = "POST"
   type                    = "AWS"
 
-   # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
+  # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
   uri         = "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
   credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
@@ -171,7 +171,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
       passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.passthrough_behavior
     }))
   }
-    lifecycle {
+  lifecycle {
     create_before_destroy = true
   }
 }
