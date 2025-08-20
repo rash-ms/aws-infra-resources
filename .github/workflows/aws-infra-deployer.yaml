@@ -1,17 +1,22 @@
 name: aws-infra-deployer
+
 on:
   push:
     paths:
     - '.github/workflows/aws-infra-deployer.yaml'
     - '.infras/**'
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   infra-nonprod-deployer:
     name: Deploy Non-Prod Infra
-    uses: rash-ms/planet-workflow/.github/workflows/infra-deployer.yml@1.0.0  # 0.7
-    permissions:
-      id-token: write  
-      contents: read   
+    uses: rash-ms/planet-workflow/.github/workflows/infra-deployer.yml@1.0.0  # 0.1
+#    permissions:
+#      id-token: write
+#      contents: read
     with:
       version: 1.2.6
       environment_plan: infra-resources-nonprod-protected

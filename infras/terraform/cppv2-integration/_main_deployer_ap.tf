@@ -172,9 +172,9 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
     # redeploy = "sqs-migration-v2"
   }
 
-  lifecycle {
-    create_before_destroy = true
-  }
+  # lifecycle {
+  #   create_before_destroy = true
+  # }
 
   depends_on = [
     aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
