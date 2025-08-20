@@ -233,7 +233,7 @@ resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_s
 }
 
 resource "aws_api_gateway_account" "userplatform_cpp_api_account_settings_ap" {
-  provider = aws.ap
+  provider            = aws.ap
   cloudwatch_role_arn = aws_iam_role.userplatform_cpp_api_gateway_cloudwatch_logging_role.arn
   # cloudwatch_role_arn = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
