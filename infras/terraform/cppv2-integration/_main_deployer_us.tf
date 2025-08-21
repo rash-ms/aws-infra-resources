@@ -8,28 +8,6 @@
 ## - Trust relationships for service integrations
 ## --------------------------------------------------
 
-
-data "aws_sqs_queue" "userplatform_cppv2_sqs_us" {
-  provider = aws.us
-  name     = "userplatform_cppv2_sqs_us"
-}
-
-data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_us" {
-  provider = aws.us
-  name     = "userplatform_cppv2_sqs_dlq_us"
-}
-
-data "aws_lambda_function" "cppv2_sqs_lambda_firehose_us" {
-  provider      = aws.us
-  function_name = "cppv2_sqs_lambda_firehose_us"
-}
-
-# Reference the existing bucket
-data "aws_s3_bucket" "userplatform_bucket_us" {
-  bucket = local.route_configs["us"].bucket
-}
-
-
 resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
   name = "cpp_integration_apigw_evtbridge_firehose_logs_role"
   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
@@ -73,24 +51,6 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn}",
           "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn}"
         ]
-      },
-
-      {
-        Effect = "Allow",
-        Action = [
-          "sqs:SendMessage"
-        ],
-        Resource = "*"
-      },
-      {
-        Effect : "Allow",
-        Action : [
-          "sqs:ReceiveMessage",
-          "sqs:DeleteMessage",
-          "sqs:GetQueueAttributes",
-          "sqs:ChangeMessageVisibility"
-        ],
-        Resource = "*"
       },
 
       # Firehose PutRecord from EventBridge
@@ -243,20 +203,28 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   http_method             = aws_api_gateway_method.userplatform_cpp_api_method_us.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-
-  uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
-  credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  uri                     = "arn:aws:apigateway:${local.route_configs["us"].region}:events:path//"
+  credentials             = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  passthrough_behavior = "NEVER"
-
-  request_parameters = {
-    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
-  }
+  passthrough_behavior = "WHEN_NO_TEMPLATES"
 
   request_templates = {
-    "application/json" = "Action=SendMessage&MessageBody=$input.body"
+    "application/json" = <<EOF
+#set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+#set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+{
+  "Entries": [
+    {
+      "Source": "cpp-api-streamhook",
+      "DetailType": "${local.route_configs["us"].route_path}",
+      "Detail": "$util.escapeJavaScript($input.body)",
+      "EventBusName": "${local.route_configs["us"].event_bus}"
+    }
+  ]
+}
+EOF
   }
 }
 
@@ -337,20 +305,12 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
   ]
 
-  triggers = {
-    redeploy = sha1(jsonencode({
-      uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
-      request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates
-      request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_parameters
-      integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_us.integration_http_method
-      credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_us.credentials
-      passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior
-    }))
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
+  #   triggers = {
+  #     redeploy_tmpt_changes = sha1(templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
+  #       event_bus_arn = local.route_configs["us"].event_bus
+  #       detail_type   = local.route_configs["us"].route_path
+  #     }))
+  #   }
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_us" {
