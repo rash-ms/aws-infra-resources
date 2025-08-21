@@ -208,7 +208,7 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_eu" {
     })
   }
   xray_tracing_enabled = true
-  depends_on           = [
+  depends_on = [
     aws_api_gateway_account.userplatform_cpp_api_account_settings_eu,
     aws_api_gateway_integration.userplatform_cpp_api_integration_eu
   ]
