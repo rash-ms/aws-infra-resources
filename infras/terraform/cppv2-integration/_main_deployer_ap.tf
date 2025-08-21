@@ -277,21 +277,21 @@ resource "aws_cloudwatch_log_group" "userplatform_cpp_firehose_to_s3_ap" {
 ## - Event targets (Firehose, Logs, etc.)
 ## --------------------------------------------------
 
-# resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_ap" {
-#   provider = aws.ap
-#   name     = "userplatform_cpp_event_bus_ap"
-# }
-#
-# resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_rule_ap" {
-#   provider       = aws.ap
-#   name           = "userplatform_cpp_eventbridge_to_firehose_rule_ap"
-#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
-#
-#   event_pattern = jsonencode({
-#     "source" : ["cpp-api-streamhook"]
-#   })
-#
-# }
+resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_ap" {
+  provider = aws.ap
+  name     = "userplatform_cpp_event_bus_ap"
+}
+
+resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_rule_ap" {
+  provider       = aws.ap
+  name           = "userplatform_cpp_eventbridge_to_firehose_rule_ap"
+  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
+
+  event_pattern = jsonencode({
+    "source" : ["cpp-api-streamhook"]
+  })
+
+}
 
 ## --------------------------------------------------
 ## KINESIS FIREHOSE RESOURCES
