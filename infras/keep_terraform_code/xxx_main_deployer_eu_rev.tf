@@ -161,6 +161,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
 
   triggers = {
     redeploy = sha1(jsonencode({
+      method             = aws_api_gateway_method.userplatform_cpp_api_method_eu.id
       uri                = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
       request_templates  = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
       request_parameters = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
@@ -222,7 +223,10 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_eu" {
     })
   }
   xray_tracing_enabled = true
-  depends_on           = [aws_api_gateway_account.userplatform_cpp_api_account_settings_eu]
+  depends_on = [
+    aws_api_gateway_account.userplatform_cpp_api_account_settings_eu,
+    aws_api_gateway_integration.userplatform_cpp_api_integration_eu
+  ]
 }
 
 resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_settings_eu" {
