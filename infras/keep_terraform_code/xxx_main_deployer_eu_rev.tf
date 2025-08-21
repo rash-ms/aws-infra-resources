@@ -57,6 +57,10 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method_eu" {
   api_key_required = true
 }
 
+
+# "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
+# "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
+
 resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
   provider                = aws.eu
   rest_api_id             = aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id
@@ -66,7 +70,7 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
   type                    = "AWS"
 
   # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
-  uri         = "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
+  uri         = "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
   credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
