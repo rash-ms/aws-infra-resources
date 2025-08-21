@@ -66,6 +66,8 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_ap" {
   type                    = "AWS"
 
   # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
+  # "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
+  # "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
   uri         = "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
   credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
@@ -91,10 +93,10 @@ resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_
   # status_code = "200"
   status_code = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap.status_code
 
-  # depends_on = [
-  #   aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
-  #   aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap
-  # ]
+  depends_on = [
+    aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap
+  ]
 
   response_parameters = {
     "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
@@ -171,21 +173,15 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
     redeployment = "sqs-migration-v2" # Simple static value
   }
 
-  # lifecycle {
-  #   create_before_destroy = true
-  # }
+  lifecycle {
+    create_before_destroy = true
+  }
 
-  # lifecycle {
-  #   replace_triggered_by = [
-  #     aws_api_gateway_integration.userplatform_cpp_api_integration_ap
-  #   ]
-  # }
-
-  # depends_on = [
-  #   aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
-  #   aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap,
-  #   aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap
-  # ]
+  depends_on = [
+    aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap,
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap
+  ]
 
 }
 
@@ -222,7 +218,7 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {
   }
   xray_tracing_enabled = true
 
-  # depends_on           = [aws_api_gateway_account.userplatform_cpp_api_account_settings_ap]
+  depends_on           = [aws_api_gateway_account.userplatform_cpp_api_account_settings_ap]
 }
 
 resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_settings_ap" {
