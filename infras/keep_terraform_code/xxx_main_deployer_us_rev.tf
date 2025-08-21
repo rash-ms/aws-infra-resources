@@ -148,6 +148,10 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method_us" {
   api_key_required = true
 }
 
+# ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
+# "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
+# "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
+
 resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   provider                = aws.us
   rest_api_id             = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
@@ -156,7 +160,6 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   integration_http_method = "POST"
   type                    = "AWS"
 
-  # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
   uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
   credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 

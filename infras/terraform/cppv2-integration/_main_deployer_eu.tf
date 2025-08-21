@@ -57,6 +57,11 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method_eu" {
   api_key_required = true
 }
 
+
+# ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
+# "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
+# "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
+
 resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
   provider                = aws.eu
   rest_api_id             = aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id
@@ -64,10 +69,8 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
   http_method             = aws_api_gateway_method.userplatform_cpp_api_method_eu.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-
-  # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
-  uri         = "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
-  credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  uri                     = "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
+  credentials             = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
@@ -153,6 +156,12 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
   provider    = aws.eu
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id
 
+  depends_on = [
+    aws_api_gateway_integration.userplatform_cpp_api_integration_eu,
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_eu,
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu
+  ]
+
   triggers = {
     redeploy = sha1(jsonencode({
       request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
@@ -174,11 +183,6 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
     create_before_destroy = true
   }
 
-  depends_on = [
-    aws_api_gateway_integration.userplatform_cpp_api_integration_eu,
-    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_eu,
-    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu
-  ]
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_eu" {

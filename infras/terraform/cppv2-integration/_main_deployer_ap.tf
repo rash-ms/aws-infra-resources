@@ -57,6 +57,10 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method_ap" {
   api_key_required = true
 }
 
+# ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
+# "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
+# "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
+
 resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_ap" {
   provider                = aws.ap
   rest_api_id             = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
@@ -64,12 +68,8 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_ap" {
   http_method             = aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-
-  # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
-  # "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
-  # "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
-  uri         = "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
-  credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  uri                     = "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
+  credentials             = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
@@ -277,21 +277,21 @@ resource "aws_cloudwatch_log_group" "userplatform_cpp_firehose_to_s3_ap" {
 ## - Event targets (Firehose, Logs, etc.)
 ## --------------------------------------------------
 
-resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_ap" {
-  provider = aws.ap
-  name     = "userplatform_cpp_event_bus_ap"
-}
-
-resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_rule_ap" {
-  provider       = aws.ap
-  name           = "userplatform_cpp_eventbridge_to_firehose_rule_ap"
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
-
-  event_pattern = jsonencode({
-    "source" : ["cpp-api-streamhook"]
-  })
-
-}
+# resource "aws_cloudwatch_event_bus" "userplatform_cpp_event_bus_ap" {
+#   provider = aws.ap
+#   name     = "userplatform_cpp_event_bus_ap"
+# }
+#
+# resource "aws_cloudwatch_event_rule" "userplatform_cpp_eventbridge_to_firehose_rule_ap" {
+#   provider       = aws.ap
+#   name           = "userplatform_cpp_eventbridge_to_firehose_rule_ap"
+#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
+#
+#   event_pattern = jsonencode({
+#     "source" : ["cpp-api-streamhook"]
+#   })
+#
+# }
 
 ## --------------------------------------------------
 ## KINESIS FIREHOSE RESOURCES
