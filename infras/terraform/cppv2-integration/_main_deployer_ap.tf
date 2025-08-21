@@ -68,7 +68,7 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_ap" {
   # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
   # "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
   # "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
-  uri         = "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
+  uri         = "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
   credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
@@ -215,7 +215,13 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {
     })
   }
   xray_tracing_enabled = true
-  depends_on           = [aws_api_gateway_account.userplatform_cpp_api_account_settings_ap]
+
+  depends_on = [aws_api_gateway_account.userplatform_cpp_api_account_settings_ap]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
 }
 
 resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_settings_ap" {
@@ -352,21 +358,21 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   }
 }
 
-resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_ap" {
-  provider       = aws.ap
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_ap.name
-  arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_ap.arn
-  role_arn       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
-}
-
-resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target_ap" {
-  provider       = aws.ap
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_ap.name
-  arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap.arn
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
-  depends_on     = [aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap]
-}
+# resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_ap" {
+#   provider       = aws.ap
+#   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_ap.name
+#   arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_ap.arn
+#   role_arn       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
+# }
+#
+# resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target_ap" {
+#   provider       = aws.ap
+#   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_ap.name
+#   arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap.arn
+#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
+#   depends_on     = [aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap]
+# }
 
 ## --------------------------------------------------
 ## CLOUDWATCH MONITORING RESOURCES
