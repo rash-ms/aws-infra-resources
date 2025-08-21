@@ -242,7 +242,7 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method_us" {
   api_key_required = true
 }
 
-resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
+resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us_test" {
   provider                = aws.us
   rest_api_id             = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
   resource_id             = aws_api_gateway_resource.userplatform_cpp_api_resource_us.id
@@ -277,7 +277,7 @@ resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_
   status_code = "200"
 
   depends_on = [
-    aws_api_gateway_integration.userplatform_cpp_api_integration_us,
+    aws_api_gateway_integration.userplatform_cpp_api_integration_us_test,
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us
   ]
 
@@ -336,25 +336,25 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_u
   usage_plan_id = aws_api_gateway_usage_plan.userplatform_cpp_api_usage_plan_us.id
 }
 
-resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us_test" {
+resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
 
   depends_on = [
     aws_api_gateway_method.userplatform_cpp_api_method_us,
-    aws_api_gateway_integration.userplatform_cpp_api_integration_us,
+    aws_api_gateway_integration.userplatform_cpp_api_integration_us_test,
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us,
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
   ]
 
   triggers = {
     redeploy = sha1(jsonencode({
-      uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
-      request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates
-      request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_parameters
-      integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_us.integration_http_method
-      credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_us.credentials
-      passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior
+      uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us_test.uri
+      request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us_test.request_templates
+      request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_us_test.request_parameters
+      integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_us_test.integration_http_method
+      credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_us_test.credentials
+      passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_us_test.passthrough_behavior
     }))
   }
 
@@ -368,7 +368,7 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_us" {
   provider      = aws.us
   stage_name    = var.stage_name
   rest_api_id   = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
-  deployment_id = aws_api_gateway_deployment.userplatform_cpp_api_deployment_us_test.id
+  deployment_id = aws_api_gateway_deployment.userplatform_cpp_api_deployment_us.id
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_us.arn
@@ -398,7 +398,7 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_us" {
   xray_tracing_enabled = true
   depends_on = [
     aws_api_gateway_account.userplatform_cpp_api_account_settings_us,
-    aws_api_gateway_integration.userplatform_cpp_api_integration_us
+    aws_api_gateway_integration.userplatform_cpp_api_integration_us_test
   ]
 
   lifecycle {
