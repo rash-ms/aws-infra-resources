@@ -155,9 +155,9 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
 
   triggers = {
     redeploy = sha1(jsonencode({
-      uri                = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.uri
-      request_templates  = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_templates
-      request_parameters = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_parameters
+      # uri                = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.uri
+      request_templates = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_templates
+      # request_parameters = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_parameters
 
       # integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.integration_http_method
       # credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.credentials
@@ -346,21 +346,21 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   }
 }
 
-resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_ap" {
-  provider       = aws.ap
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_ap.name
-  arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_ap.arn
-  role_arn       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
-}
-
-resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target_ap" {
-  provider       = aws.ap
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_ap.name
-  arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap.arn
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
-  depends_on     = [aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap]
-}
+# resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_ap" {
+#   provider       = aws.ap
+#   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_ap.name
+#   arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_ap.arn
+#   role_arn       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
+# }
+#
+# resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target_ap" {
+#   provider       = aws.ap
+#   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_ap.name
+#   arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap.arn
+#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.name
+#   depends_on     = [aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_ap]
+# }
 
 ## --------------------------------------------------
 ## CLOUDWATCH MONITORING RESOURCES
