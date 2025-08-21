@@ -52,7 +52,33 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn}"
         ]
       },
+      {
+        Effect = "Allow",
+        Action = [
+          "sqs:SendMessage"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect : "Allow",
+        Action : [
+          "sqs:ReceiveMessage",
+          "sqs:DeleteMessage",
+          "sqs:GetQueueAttributes",
+          "sqs:ChangeMessageVisibility",
 
+          "sqs:GetQueueUrl",
+          "sqs:ListDeadLetterSourceQueues",
+          "sqs:SendMessageBatch",
+          "sqs:PurgeQueue",
+          "sqs:SendMessage",
+          "sqs:CreateQueue",
+          "sqs:ListQueueTags",
+          "sqs:ChangeMessageVisibilityBatch",
+          "sqs:SetQueueAttributes"
+        ],
+        Resource = "*"
+      },
       # Firehose PutRecord from EventBridge
       {
         Effect = "Allow",
