@@ -9,6 +9,27 @@
 ## - Stage and deployment management
 ## --------------------------------------------------
 
+data "aws_sqs_queue" "userplatform_cppv2_sqs_eu" {
+  provider = aws.eu
+  name     = "userplatform_cppv2_sqs_eu"
+}
+
+data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_eu" {
+  provider = aws.eu
+  name     = "userplatform_cppv2_sqs_dlq_eu"
+}
+
+data "aws_lambda_function" "cppv2_sqs_lambda_firehose_eu" {
+  provider      = aws.eu
+  function_name = "cppv2_sqs_lambda_firehose_eu"
+}
+
+# Reference the existing bucket
+# data "aws_s3_bucket" "userplatform_bucket_eu" {
+#   bucket = local.route_configs["eu"].bucket
+# }
+
+
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_eu" {
   provider    = aws.eu
   name        = "userplatform_cpp_rest_api_eu"
@@ -42,37 +63,22 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
   http_method             = aws_api_gateway_method.userplatform_cpp_api_method_eu.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${local.route_configs["eu"].region}:events:path//"
+  uri                     = "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
   credentials             = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  passthrough_behavior = "WHEN_NO_TEMPLATES"
+  passthrough_behavior = "NEVER"
 
-  #   request_templates = {
-  #     "application/json" = templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
-  #       event_bus_arn = local.route_configs["eu"].event_bus
-  #       detail_type   = local.route_configs["eu"].route_path
-  #     })
-  #   }
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
+  }
 
   request_templates = {
-    "application/json" = <<EOF
-#set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-#set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-{
-  "Entries": [
-    {
-      "Source": "cpp-api-streamhook",
-      "DetailType": "${local.route_configs["eu"].route_path}",
-      "Detail": "$util.escapeJavaScript($input.body)",
-      "EventBusName": "${local.route_configs["eu"].event_bus}"
-    }
-  ]
-}
-EOF
+    "application/json" = "Action=SendMessage&MessageBody=$input.body"
   }
 }
+
 
 resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_eu" {
   provider    = aws.eu
@@ -146,17 +152,28 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id
 
   depends_on = [
+    aws_api_gateway_method.userplatform_cpp_api_method_eu,
     aws_api_gateway_integration.userplatform_cpp_api_integration_eu,
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_eu,
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu
   ]
 
-  #   triggers = {
-  #     redeploy_tmpt_changes = sha1(templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
-  #       event_bus_arn = local.route_configs["eu"].event_bus
-  #       detail_type   = local.route_configs["eu"].route_path
-  #     }))
-  #   }
+  triggers = {
+    redeploy = sha1(jsonencode({
+      uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
+      type                    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.type
+      http_method             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.http_method
+      request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
+      request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
+      integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
+      credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
+      passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
+    }))
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_eu" {
@@ -192,6 +209,10 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_eu" {
   }
   xray_tracing_enabled = true
   depends_on           = [aws_api_gateway_account.userplatform_cpp_api_account_settings_eu]
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_settings_eu" {
