@@ -17,7 +17,7 @@ locals {
       region     = "ap-northeast-1",
       route_path = var.route_path["ap"],
       bucket     = var.userplatform_s3_bucket["ap"],
-      # event_bus  = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn
+      event_bus  = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn
     }
   }
 }
