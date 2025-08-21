@@ -157,30 +157,33 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
   provider    = aws.ap
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
 
-  # triggers = {
-  #   redeploy = sha1(jsonencode({
-  #     request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_templates
-  #     request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_parameters
-  #     uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.uri
-  #     integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.integration_http_method
-  #     credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.credentials
-  #     passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.passthrough_behavior
-  #   }))
-  # }
-
   triggers = {
-    # redeploy = "sqs-migration-${timestamp()}" # This will force a new deployment
-    redeployment = "sqs-migration-v2" # Simple static value
+    redeploy = sha1(jsonencode({
+      uri                = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.uri
+      request_templates  = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_templates
+      request_parameters = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_parameters
+
+      # integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.integration_http_method
+      # credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.credentials
+      # passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.passthrough_behavior
+    }))
   }
+
+  # triggers = {
+  #   # redeploy = "sqs-migration-${timestamp()}" # This will force a new deployment
+  #   redeployment = "sqs-migration-v2" # Simple static value
+  # }
 
   lifecycle {
     create_before_destroy = true
   }
 
   depends_on = [
-    aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
-    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap,
-    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap,
+
+    # aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
+    # aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap,
+
   ]
 
 }
@@ -218,7 +221,7 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {
   }
   xray_tracing_enabled = true
 
-  depends_on           = [aws_api_gateway_account.userplatform_cpp_api_account_settings_ap]
+  depends_on = [aws_api_gateway_account.userplatform_cpp_api_account_settings_ap]
 }
 
 resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_settings_ap" {

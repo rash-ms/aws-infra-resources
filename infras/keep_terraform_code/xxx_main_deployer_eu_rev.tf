@@ -157,12 +157,13 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
 
   triggers = {
     redeploy = sha1(jsonencode({
-      request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
-      request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
-      uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
-      integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
-      credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
-      passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
+      uri                = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
+      request_templates  = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
+      request_parameters = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
+
+      # integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
+      # credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
+      # passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
     }))
   }
 
@@ -177,9 +178,10 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
   }
 
   depends_on = [
-    aws_api_gateway_integration.userplatform_cpp_api_integration_eu,
-    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_eu,
-    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu,
+
+    # aws_api_gateway_integration.userplatform_cpp_api_integration_eu,
+    # aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_eu,
   ]
 
 }
