@@ -332,8 +332,16 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
     redeploy = sha1(jsonencode(aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates))
   }
 
+  # lifecycle {
+  #   create_before_destroy = true
+  # }
+
+
   lifecycle {
     create_before_destroy = true
+    replace_triggered_by = [
+      aws_api_gateway_integration.userplatform_cpp_api_integration_us.id
+    ]
   }
 
 }
