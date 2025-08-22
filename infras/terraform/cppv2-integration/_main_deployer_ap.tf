@@ -213,9 +213,9 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
     redeploy = local.force_redeploy_ap
   }
 
-  lifecycle {
-    create_before_destroy = true
-  }
+  # lifecycle {
+  #   create_before_destroy = true
+  # }
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {
