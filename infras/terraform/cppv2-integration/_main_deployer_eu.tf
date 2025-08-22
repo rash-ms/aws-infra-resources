@@ -154,7 +154,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
   triggers = {
     # redeploy = "sqs-migration-${timestamp()}" # This will force a new deployment
     # OR use a static value that you increment manually:
-    redeploy = "sqs-migration-v2"
+    redeploy = "sqs-migration-v3"
   }
 
   lifecycle {
