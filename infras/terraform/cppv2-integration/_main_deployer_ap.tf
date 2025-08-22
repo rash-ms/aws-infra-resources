@@ -199,11 +199,11 @@ resource "null_resource" "force_put_sqs_integration_ap" {
         --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
         --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id} \
         --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
-        --type AWS \
-        --integration-http-method POST \
+        --type ${aws_api_gateway_integration.userplatform_cpp_api_integration_ap.type} \
+        --integration-http-method ${aws_api_gateway_integration.userplatform_cpp_api_integration_ap.integration_http_method} \
         --uri arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name} \
         --credentials ${aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn} \
-        --passthrough-behavior NEVER \
+        --passthrough-behavior ${aws_api_gateway_integration.userplatform_cpp_api_integration_ap.passthrough_behavior} \
         --request-parameters '{"integration.request.header.Content-Type":"'\''application/x-www-form-urlencoded'\''"}' \
         --request-templates '{"application/json":"Action=SendMessage&MessageBody=$input.body"}'
     EOT
