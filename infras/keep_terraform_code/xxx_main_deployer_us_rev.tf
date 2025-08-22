@@ -244,6 +244,19 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_u
   usage_plan_id = aws_api_gateway_usage_plan.userplatform_cpp_api_usage_plan_us.id
 }
 
+
+locals {
+  force_redeploy_us = sha1(jsonencode({
+    uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
+    request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates
+    request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_parameters
+    integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_us.integration_http_method
+    credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_us.credentials
+    passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior
+  }))
+}
+
+
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
@@ -255,21 +268,12 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   ]
 
   triggers = {
-    redeploy = sha1(jsonencode({
-      uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
-      request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates
-      request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_parameters
-      integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_us.integration_http_method
-      credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_us.credentials
-      passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior
-    }))
+    redeploy = local.force_redeploy_us
   }
-
 
   lifecycle {
     create_before_destroy = true
   }
-
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_us" {

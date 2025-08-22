@@ -82,44 +82,87 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_ap" {
   }
 }
 
-resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_ap" {
-  provider    = aws.ap
+
+# *************************************************
+
+# resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_method_response_ap" {
+#   provider    = aws.ap
+#   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
+#   resource_id = aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id
+#   http_method = aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method
+#   status_code = "200"
+#
+#   response_parameters = {
+#     "method.response.header.x-amz-request-id" = true,
+#     "method.response.header.etag"             = true
+#   }
+#
+#   response_models = {
+#     "application/json" = "Empty"
+#   }
+# }
+
+# resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_ap" {
+#   provider    = aws.ap
+#   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
+#   resource_id = aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id
+#   http_method = aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method
+#   status_code = "200"
+#
+#   depends_on = [
+#     aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
+#     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap
+#   ]
+#
+#   response_parameters = {
+#     "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
+#     "method.response.header.etag"             = "integration.response.header.ETag"
+#   }
+#
+#   response_templates = {
+#     "application/json" = ""
+#   }
+# }
+
+# *************************************************
+
+
+# Method responses: declare allowed status codes (no headers)
+resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_method_response_ap" {
+  provider = aws.ap
+
+  for_each    = local.responses
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
   resource_id = aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id
   http_method = aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method
-  status_code = "200"
+  status_code = each.key
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
+# Integration responses: map SQS → client (no header passthrough)
+resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_ap" {
+  provider = aws.ap
+
+  for_each          = local.responses
+  rest_api_id       = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
+  resource_id       = aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id
+  http_method       = aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method
+  status_code       = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap[each.key].status_code
+  selection_pattern = try(each.value.selection_pattern, null)
 
   depends_on = [
     aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap
   ]
 
-  response_parameters = {
-    "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
-    "method.response.header.etag"             = "integration.response.header.ETag"
-  }
-
   response_templates = {
-    "application/json" = ""
+    "application/json" = each.value.template
   }
 }
 
-resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_method_response_ap" {
-  provider    = aws.ap
-  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
-  resource_id = aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id
-  http_method = aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.x-amz-request-id" = true,
-    "method.response.header.etag"             = true
-  }
-
-  response_models = {
-    "application/json" = "Empty"
-  }
-}
 
 resource "aws_api_gateway_api_key" "userplatform_cpp_api_key_ap" {
   provider = aws.ap

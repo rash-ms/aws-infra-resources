@@ -155,37 +155,34 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_e
   usage_plan_id = aws_api_gateway_usage_plan.userplatform_cpp_api_usage_plan_eu.id
 }
 
+locals {
+  force_redeploy_eu = sha1(jsonencode({
+    uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
+    request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
+    request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
+    integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
+    credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
+    passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
+  }))
+}
+
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
   provider    = aws.eu
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id
-
-  triggers = {
-    redeploy = sha1(jsonencode({
-      method             = aws_api_gateway_method.userplatform_cpp_api_method_eu.id
-      uri                = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
-      request_templates  = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
-      request_parameters = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
-      integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
-      credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
-      passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
-    }))
-  }
-
-  # triggers = {
-  #   redeploy = "sqs-migration-${timestamp()}" # This will force a new deployment
-  #   # OR use a static value that you increment manually:
-  #   # redeploy = "sqs-migration-v2"
-  # }
-
-  lifecycle {
-    create_before_destroy = true
-  }
 
   depends_on = [
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu,
     aws_api_gateway_integration.userplatform_cpp_api_integration_eu,
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_eu,
   ]
+
+  triggers = {
+    redeploy = local.force_redeploy_eu
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 
 }
 

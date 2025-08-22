@@ -21,3 +21,29 @@ locals {
     }
   }
 }
+
+
+locals {
+  responses = {
+    "200" = {
+      # success → no selection_pattern
+      template = <<EOF
+{
+  "messageId": "$input.path('$.SendMessageResponse.SendMessageResult.MessageId')"
+}
+EOF
+    }
+    "400" = {
+      selection_pattern = "4\\d{2}"
+      template = <<EOF
+{ "error": "Bad request to SQS", "details": "$input.path('$.ErrorMessage')" }
+EOF
+    }
+    "500" = {
+      selection_pattern = "5\\d{2}"
+      template = <<EOF
+{ "error": "SQS internal failure", "details": "$input.path('$.ErrorMessage')" }
+EOF
+    }
+  }
+}

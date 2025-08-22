@@ -153,25 +153,20 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_a
   usage_plan_id = aws_api_gateway_usage_plan.userplatform_cpp_api_usage_plan_ap.id
 }
 
+locals {
+  force_redeploy_ap = sha1(jsonencode({
+    uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
+    request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
+    request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
+    integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
+    credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
+    passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
+  }))
+}
+
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
   provider    = aws.ap
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
-
-  triggers = {
-    redeploy = sha1(jsonencode({
-      method             = aws_api_gateway_method.userplatform_cpp_api_method_ap.id
-      uri                = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.uri
-      request_templates  = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_templates
-      request_parameters = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_parameters
-      integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.integration_http_method
-      credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.credentials
-      passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.passthrough_behavior
-    }))
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
 
   depends_on = [
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap,
@@ -179,6 +174,13 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap,
   ]
 
+  triggers = {
+    redeploy = local.force_redeploy_ap
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {
