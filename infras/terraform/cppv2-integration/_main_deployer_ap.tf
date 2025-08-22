@@ -195,16 +195,16 @@ resource "null_resource" "force_put_sqs_integration_ap" {
   provisioner "local-exec" {
     command = <<-EOT
       aws apigateway put-integration \
-        --region ap-northeast-1 \
-        --rest-api-id b418kxl6p6 \
-        --resource-id 8mwzkl \
-        --http-method POST \
+        --region ${local.route_configs["ap"].region} \
+        --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
+        --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id} \
+        --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
         --type AWS \
         --integration-http-method POST \
-        --uri arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}
+        --uri arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name} \
         --credentials ${aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn} \
         --passthrough-behavior NEVER \
-        --request-parameters '{"integration.request.header.Content-Type":"'\''application/x-www-form-urlencoded'\''"}'
+        --request-parameters '{"integration.request.header.Content-Type":"'\''application/x-www-form-urlencoded'\''"}' \
         --request-templates '{"application/json":"Action=SendMessage&MessageBody=$input.body"}'
     EOT
   }
