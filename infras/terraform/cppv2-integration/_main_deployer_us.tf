@@ -234,7 +234,7 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method_us" {
 
 
 locals {
-  force_redeploy_us = "cppv2-release-v0"
+  force_redeploy_us = "cppv2-release-v5"
 
   # force_redeploy_us = sha1(jsonencode({
   #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
@@ -385,10 +385,15 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
 
 }
 
-resource "time_sleep" "api_gateway_settle_us" {
-  provider        = aws.us
-  depends_on      = [aws_api_gateway_deployment.userplatform_cpp_api_deployment_us]
-  create_duration = "30s" # keep small; this is what removes the need to rerun CI/CD
+
+resource "null_resource" "api_gateway_settle_us" {
+  triggers = {
+    run = aws_api_gateway_deployment.userplatform_cpp_api_deployment_us.id
+  }
+
+  provisioner "local-exec" {
+    command = "sleep 30"
+  }
 }
 
 
@@ -396,11 +401,11 @@ resource "aws_api_gateway_deployment" "cppv2_base_deployment_us" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
 
-  depends_on = [time_sleep.api_gateway_settle_us]
+  depends_on = [null_resource.api_gateway_settle_us]
 
   lifecycle {
     create_before_destroy = true
-    replace_triggered_by  = [time_sleep.api_gateway_settle_us]
+    replace_triggered_by  = [null_resource.api_gateway_settle_us]
   }
 
 }
