@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_ap = "cppv2-release-v0.5"
+  force_redeploy_ap = "cppv2-release-v0.2"
 
   # force_redeploy_ap = sha1(jsonencode({
   #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
@@ -169,6 +169,17 @@ resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_metho
   }
 
 }
+
+moved {
+  from = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap
+  to   = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap["200"]
+}
+
+moved {
+  from = aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap
+  to   = aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap["200"]
+}
+
 
 resource "aws_api_gateway_api_key" "userplatform_cpp_api_key_ap" {
   provider = aws.ap
