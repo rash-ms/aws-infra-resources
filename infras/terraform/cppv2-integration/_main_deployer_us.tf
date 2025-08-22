@@ -324,7 +324,7 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_u
 
 
 locals {
-  force_redeploy_us = "cppv2-release-v0"
+  force_redeploy_us = "cppv2-release-v1"
 
   # force_redeploy_us = sha1(jsonencode({
   #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
@@ -337,7 +337,7 @@ locals {
 }
 
 
-resource "aws_api_gateway_deployment" "cppv2_base_deployment_us" {
+resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
 
@@ -356,24 +356,27 @@ resource "aws_api_gateway_deployment" "cppv2_base_deployment_us" {
   }
 }
 
-resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
+resource "aws_api_gateway_deployment" "cppv2_base_deployment_us" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
 
-  depends_on = [aws_api_gateway_deployment.cppv2_base_deployment_us]
+  depends_on = [aws_api_gateway_deployment.userplatform_cpp_api_deployment_us]
 
   lifecycle {
     create_before_destroy = true
-    replace_triggered_by  = [aws_api_gateway_deployment.cppv2_base_deployment_us]
+    replace_triggered_by  = [aws_api_gateway_deployment.userplatform_cpp_api_deployment_us]
   }
 
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_us" {
-  provider      = aws.us
-  stage_name    = var.stage_name
-  rest_api_id   = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
-  deployment_id = aws_api_gateway_deployment.userplatform_cpp_api_deployment_us.id
+  provider    = aws.us
+  stage_name  = var.stage_name
+  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
+  # deployment_id = aws_api_gateway_deployment.userplatform_cpp_api_deployment_us.id
+  deployment_id = aws_api_gateway_deployment.cppv2_base_deployment_us.id
+
+
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_us.arn

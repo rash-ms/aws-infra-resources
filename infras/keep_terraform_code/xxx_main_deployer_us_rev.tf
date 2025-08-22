@@ -246,14 +246,16 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_u
 
 
 locals {
-  force_redeploy_us = sha1(jsonencode({
-    uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
-    request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates
-    request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_parameters
-    integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_us.integration_http_method
-    credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_us.credentials
-    passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior
-  }))
+  force_redeploy_us = "cppv2-release-v01"
+
+  # force_redeploy_us = sha1(jsonencode({
+  #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
+  #   request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates
+  #   request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_parameters
+  #   integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_us.integration_http_method
+  #   credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_us.credentials
+  #   passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior
+  # }))
 }
 
 
