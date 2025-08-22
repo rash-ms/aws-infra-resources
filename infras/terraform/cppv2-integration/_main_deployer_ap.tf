@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_ap = "cppv2-release-v0.1"
+  force_redeploy_ap = "cppv2-release-v0.6"
 
   # force_redeploy_ap = sha1(jsonencode({
   #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
@@ -245,7 +245,11 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {
     })
   }
   xray_tracing_enabled = true
-  depends_on           = [aws_api_gateway_account.userplatform_cpp_api_account_settings_ap]
+  depends_on = [
+    aws_api_gateway_account.userplatform_cpp_api_account_settings_ap,
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap,
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap
+  ]
 }
 
 resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_settings_ap" {
