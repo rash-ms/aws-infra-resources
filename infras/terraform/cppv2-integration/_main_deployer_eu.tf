@@ -151,12 +151,15 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu
   ]
 
-  #   triggers = {
-  #     redeploy_tmpt_changes = sha1(templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
-  #       event_bus_arn = local.route_configs["eu"].event_bus
-  #       detail_type   = local.route_configs["eu"].route_path
-  #     }))
-  #   }
+  triggers = {
+    # redeploy = "sqs-migration-${timestamp()}" # This will force a new deployment
+    # OR use a static value that you increment manually:
+    redeploy = "sqs-migration-v2"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_eu" {
