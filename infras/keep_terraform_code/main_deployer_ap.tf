@@ -40,7 +40,7 @@ resource "aws_api_gateway_resource" "userplatform_cpp_api_resource_ap" {
 }
 
 resource "aws_api_gateway_method" "userplatform_cpp_api_method_ap" {
-  provider         = aws.apn
+  provider         = aws.ap
   rest_api_id      = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
   resource_id      = aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id
   http_method      = "POST"
