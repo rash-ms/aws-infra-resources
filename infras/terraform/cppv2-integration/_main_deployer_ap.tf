@@ -160,6 +160,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
 
   depends_on = [
+    aws_api_gateway_method.userplatform_cpp_api_method_ap,
     aws_api_gateway_integration.userplatform_cpp_api_integration_ap_test,
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap,
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap
