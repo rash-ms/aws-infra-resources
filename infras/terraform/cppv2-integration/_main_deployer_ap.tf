@@ -194,6 +194,7 @@ resource "null_resource" "force_put_sqs_integration_ap" {
   provisioner "local-exec" {
     command = <<EOT
 aws apigateway put-integration \
+  --region ${local.route_configs["ap"].region} \
   --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
   --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id} \
   --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
