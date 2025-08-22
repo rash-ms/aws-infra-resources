@@ -181,6 +181,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
   }
 }
 
+
 resource "null_resource" "force_put_sqs_integration_ap" {
   depends_on = [
     aws_api_gateway_stage.userplatform_cpp_api_stage_ap,
@@ -200,7 +201,7 @@ resource "null_resource" "force_put_sqs_integration_ap" {
         --http-method POST \
         --type AWS \
         --integration-http-method POST \
-        --uri arn:aws:apigateway:ap-northeast-1:sqs:path/***/userplatform_cppv2_sqs_ap \
+        --uri arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}
         --credentials ${aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn} \
         --passthrough-behavior NEVER \
         --request-parameters '{"integration.request.header.Content-Type":"'\''application/x-www-form-urlencoded'\''"}'
