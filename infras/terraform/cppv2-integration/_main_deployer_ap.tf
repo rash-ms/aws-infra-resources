@@ -154,7 +154,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
 
   triggers = {
     redeploy = sha1(jsonencode({
-      integration_id          = aws_api_gateway_integration.userplatform_cpp_api_integration_us.id
+      integration_id          = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.id
       method                  = aws_api_gateway_method.userplatform_cpp_api_method_ap.id
       uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.uri
       request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_templates
