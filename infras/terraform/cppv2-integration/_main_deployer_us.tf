@@ -232,6 +232,20 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method_us" {
   api_key_required = true
 }
 
+
+locals {
+  force_redeploy_us = "cppv2-release-v0"
+
+  # force_redeploy_us = sha1(jsonencode({
+  #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
+  #   request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates
+  #   request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_parameters
+  #   integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_us.integration_http_method
+  #   credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_us.credentials
+  #   passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior
+  # }))
+}
+
 resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   provider                = aws.us
   rest_api_id             = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
@@ -239,21 +253,48 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   http_method             = aws_api_gateway_method.userplatform_cpp_api_method_us.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
-  credentials             = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+
+  #   uri                     = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
+  #   credentials             = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  #
+  #   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
+  #   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
+  #   passthrough_behavior = "NEVER"
+  #
+  #   request_parameters = {
+  #     "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
+  #   }
+  #
+  #   request_templates = {
+  #     "application/json" = "Action=SendMessage&MessageBody=$input.body"
+  #   }
+
+  uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:events:path//"
+  credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  passthrough_behavior = "NEVER"
-
-  request_parameters = {
-    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
-  }
+  passthrough_behavior = "WHEN_NO_TEMPLATES"
 
   request_templates = {
-    "application/json" = "Action=SendMessage&MessageBody=$input.body"
+    "application/json" = <<EOF
+#set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+#set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+{
+  "Entries": [
+    {
+      "Source": "cpp-api-streamhook",
+      "DetailType": "${local.route_configs["us"].route_path}",
+      "Detail": "$util.escapeJavaScript($input.body)",
+      "EventBusName": "${local.route_configs["us"].event_bus}"
+    }
+  ]
+}
+EOF
   }
 }
+
+
 
 # resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_us" {
 #   provider    = aws.us
@@ -320,20 +361,6 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_u
   key_id        = aws_api_gateway_api_key.userplatform_cpp_api_key_us.id
   key_type      = "API_KEY"
   usage_plan_id = aws_api_gateway_usage_plan.userplatform_cpp_api_usage_plan_us.id
-}
-
-
-locals {
-  force_redeploy_us = "cppv2-release-v1"
-
-  # force_redeploy_us = sha1(jsonencode({
-  #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
-  #   request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates
-  #   request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_parameters
-  #   integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_us.integration_http_method
-  #   credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_us.credentials
-  #   passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior
-  # }))
 }
 
 
