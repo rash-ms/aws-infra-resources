@@ -8,6 +8,26 @@
 ## - Trust relationships for service integrations
 ## --------------------------------------------------
 
+data "aws_sqs_queue" "userplatform_cppv2_sqs_us" {
+  provider = aws.us
+  name     = "userplatform_cppv2_sqs_us"
+}
+
+data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_us" {
+  provider = aws.us
+  name     = "userplatform_cppv2_sqs_dlq_us"
+}
+
+data "aws_lambda_function" "cppv2_sqs_lambda_firehose_us" {
+  provider      = aws.us
+  function_name = "cppv2_sqs_lambda_firehose_us"
+}
+
+# Reference the existing bucket
+data "aws_s3_bucket" "userplatform_bucket_us" {
+  bucket = local.route_configs["us"].bucket
+}
+
 resource "aws_iam_role" "cpp_integration_apigw_evtbridge_firehose_logs_role" {
   name = "cpp_integration_apigw_evtbridge_firehose_logs_role"
   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
@@ -219,28 +239,18 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   http_method             = aws_api_gateway_method.userplatform_cpp_api_method_us.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${local.route_configs["us"].region}:events:path//"
+  uri                     = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
   credentials             = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  passthrough_behavior = "WHEN_NO_TEMPLATES"
+  passthrough_behavior = "NEVER"
 
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
+  }
   request_templates = {
-    "application/json" = <<EOF
-#set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-#set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-{
-  "Entries": [
-    {
-      "Source": "cpp-api-streamhook",
-      "DetailType": "${local.route_configs["us"].route_path}",
-      "Detail": "$util.escapeJavaScript($input.body)",
-      "EventBusName": "${local.route_configs["us"].event_bus}"
-    }
-  ]
-}
-EOF
+    "application/json" = "Action=SendMessage&MessageBody=$input.body"
   }
 }
 
@@ -311,18 +321,28 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_u
   usage_plan_id = aws_api_gateway_usage_plan.userplatform_cpp_api_usage_plan_us.id
 }
 
+
+resource "time_sleep" "wait_for_apigw_integration_us" {
+  create_duration = "50s"
+
+  depends_on = [
+    aws_api_gateway_integration.userplatform_cpp_api_integration_us
+  ]
+}
+
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
 
   depends_on = [
+    time_sleep.wait_for_apigw_integration_us,
     aws_api_gateway_integration.userplatform_cpp_api_integration_us,
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us,
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
   ]
 
   triggers = {
-    redeploy = "sqs-migration-v1"
+    redeploy = "sqs-migration-v2"
   }
 
   lifecycle {
