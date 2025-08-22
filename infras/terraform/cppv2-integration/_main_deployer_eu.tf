@@ -150,7 +150,7 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_e
 
 
 locals {
-  force_redeploy = sha1(jsonencode({
+  force_redeploy_eu = sha1(jsonencode({
     uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
     request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
     request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
@@ -171,7 +171,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
   ]
 
   triggers = {
-    redeploy = local.force_redeploy
+    redeploy = local.force_redeploy_eu
   }
 
   lifecycle {
@@ -187,7 +187,7 @@ resource "null_resource" "force_put_sqs_integration_eu" {
   ]
 
   triggers = {
-    redeploy = local.force_redeploy
+    redeploy = local.force_redeploy_eu
   }
 
   provisioner "local-exec" {
