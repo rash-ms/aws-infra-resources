@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_ap = "cppv2-release-v0.0"
+  force_redeploy_ap = "cppv2-release-v0.1"
 
   # force_redeploy_ap = sha1(jsonencode({
   #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
@@ -213,9 +213,9 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
     redeploy = local.force_redeploy_ap
   }
 
-  # lifecycle {
-  #   create_before_destroy = true
-  # }
+  lifecycle {
+    create_before_destroy = false
+  }
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {
