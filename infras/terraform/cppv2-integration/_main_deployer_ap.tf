@@ -214,7 +214,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
   }
 
   lifecycle {
-    create_before_destroy = false
+    create_before_destroy = true
   }
 }
 
