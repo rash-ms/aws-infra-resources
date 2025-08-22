@@ -144,7 +144,8 @@ resource "null_resource" "force_put_sqs_integration_ap" {
         --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
         --status-code ${code} \
         %{if try(cfg.selection_pattern, null) != null}--selection-pattern "${cfg.selection_pattern}" %{endif} \
-        --response-templates '{"application/json":"${replace(cfg.template, "\n", "")}"}'
+        --response-templates '${jsonencode({ "application/json" = cfg.template })}'
+
 
       aws apigateway put-method-response \
         --region ${local.route_configs["ap"].region} \
