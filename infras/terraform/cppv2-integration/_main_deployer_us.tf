@@ -234,7 +234,7 @@ resource "aws_api_gateway_method" "userplatform_cpp_api_method_us" {
 
 
 locals {
-  force_redeploy_us = "cppv2-release-v1"
+  force_redeploy_us = "cppv2-release-v0"
 
   # force_redeploy_us = sha1(jsonencode({
   #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
@@ -254,44 +254,44 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   integration_http_method = "POST"
   type                    = "AWS"
 
-  # uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
-  # credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  #
-  # # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
-  # # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  # passthrough_behavior = "NEVER"
-  #
-  # request_parameters = {
-  #   "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
-  # }
-  #
-  # request_templates = {
-  #   "application/json" = "Action=SendMessage&MessageBody=$input.body"
-  # }
-
-  uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:events:path//"
+  uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
   credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  passthrough_behavior = "WHEN_NO_TEMPLATES"
+  passthrough_behavior = "NEVER"
+
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
+  }
 
   request_templates = {
-    "application/json" = <<EOF
-  #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-  #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-  {
-    "Entries": [
-      {
-        "Source": "cpp-api-streamhook",
-        "DetailType": "${local.route_configs["us"].route_path}",
-        "Detail": "$util.escapeJavaScript($input.body)",
-        "EventBusName": "${local.route_configs["us"].event_bus}"
-      }
-    ]
+    "application/json" = "Action=SendMessage&MessageBody=$input.body"
   }
-  EOF
-  }
+
+  # uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:events:path//"
+  # credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  #
+  # # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
+  # # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
+  # passthrough_behavior = "WHEN_NO_TEMPLATES"
+  #
+  # request_templates = {
+  #   "application/json" = <<EOF
+  # #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+  # #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+  # {
+  #   "Entries": [
+  #     {
+  #       "Source": "cpp-api-streamhook",
+  #       "DetailType": "${local.route_configs["us"].route_path}",
+  #       "Detail": "$util.escapeJavaScript($input.body)",
+  #       "EventBusName": "${local.route_configs["us"].event_bus}"
+  #     }
+  #   ]
+  # }
+  # EOF
+  # }
 
 }
 
@@ -364,26 +364,10 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_u
 }
 
 
-locals {
-  resource_ids    = try(sort([for r in aws_api_gateway_resource.userplatform_cpp_api_resource_us : r.id]), [])
-  method_ids      = try(sort([for m in aws_api_gateway_method.userplatform_cpp_api_method_us : m.id]), [])
-  integration_ids = try(sort([for i in aws_api_gateway_integration.userplatform_cpp_api_integration_us : i.id]), [])
-
-  # Fingerprint changes whenever any resource/method/integration changes
-  deployment_fingerprint = sha1(jsonencode({
-    resources    = local.resource_ids
-    methods      = local.method_ids
-    integrations = local.integration_ids
-  }))
-}
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
-
-  triggers = {
-    redeploy = local.deployment_fingerprint
-  }
 
   lifecycle {
     create_before_destroy = true
@@ -391,39 +375,42 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
 
   depends_on = [
     aws_api_gateway_integration.userplatform_cpp_api_integration_us,
-    aws_api_gateway_method.userplatform_cpp_api_method_us,
-    aws_api_gateway_resource.userplatform_cpp_api_resource_us
     # aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us,
     # aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
   ]
 
-  # triggers = {
-  #   redeploy = local.force_redeploy_us
-  # }
+  triggers = {
+    redeploy = local.force_redeploy_us
+  }
 
 }
 
-# resource "aws_api_gateway_deployment" "cppv2_base_deployment_us" {
-#   provider    = aws.us
-#   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
-#
-#   depends_on = [aws_api_gateway_deployment.userplatform_cpp_api_deployment_us]
-#
-#   lifecycle {
-#     create_before_destroy = true
-#     replace_triggered_by  = [aws_api_gateway_deployment.userplatform_cpp_api_deployment_us]
-#   }
-#
-# }
+resource "time_sleep" "api_gateway_settle_us" {
+  provider        = aws.us
+  depends_on      = [aws_api_gateway_deployment.userplatform_cpp_api_deployment_us]
+  create_duration = "30s" # keep small; this is what removes the need to rerun CI/CD
+}
+
+
+resource "aws_api_gateway_deployment" "cppv2_base_deployment_us" {
+  provider    = aws.us
+  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
+
+  depends_on = [time_sleep.api_gateway_settle_us]
+
+  lifecycle {
+    create_before_destroy = true
+    replace_triggered_by  = [time_sleep.api_gateway_settle_us]
+  }
+
+}
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_us" {
-  provider      = aws.us
-  stage_name    = var.stage_name
-  rest_api_id   = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
-  deployment_id = aws_api_gateway_deployment.userplatform_cpp_api_deployment_us.id
-  # deployment_id = aws_api_gateway_deployment.cppv2_base_deployment_us.id
-
-
+  provider    = aws.us
+  stage_name  = var.stage_name
+  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
+  # deployment_id = aws_api_gateway_deployment.userplatform_cpp_api_deployment_us.id
+  deployment_id = aws_api_gateway_deployment.cppv2_base_deployment_us.id
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.userplatform_cpp_api_gateway_logs_us.arn
