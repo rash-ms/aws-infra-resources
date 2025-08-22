@@ -321,12 +321,18 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
   ]
 
-  #   triggers = {
-  #     redeploy_tmpt_changes = sha1(templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
-  #       event_bus_arn = local.route_configs["us"].event_bus
-  #       detail_type   = local.route_configs["us"].route_path
-  #     }))
-  #   }
+  triggers = {
+    redeploy = sha1(jsonencode({
+      integration_id          = aws_api_gateway_integration.userplatform_cpp_api_integration_us.id
+      method                  = aws_api_gateway_method.userplatform_cpp_api_method_us.id
+      uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_us.uri
+      request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_templates
+      request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_us.request_parameters
+      integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_us.integration_http_method
+      credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_us.credentials
+      passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior
+    }))
+  }
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_us" {
