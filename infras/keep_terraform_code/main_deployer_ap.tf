@@ -9,6 +9,19 @@
 ## - Stage and deployment management
 ## --------------------------------------------------
 
+locals {
+  force_redeploy_ap = "cppv2-release-v0.0"
+
+  # force_redeploy_ap = sha1(jsonencode({
+  #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
+  #   request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
+  #   request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
+  #   integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
+  #   credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
+  #   passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
+  # }))
+}
+
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_ap" {
   provider    = aws.ap
   name        = "userplatform_cpp_rest_api_ap"
@@ -27,7 +40,7 @@ resource "aws_api_gateway_resource" "userplatform_cpp_api_resource_ap" {
 }
 
 resource "aws_api_gateway_method" "userplatform_cpp_api_method_ap" {
-  provider         = aws.ap
+  provider         = aws.apn
   rest_api_id      = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
   resource_id      = aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id
   http_method      = "POST"

@@ -9,6 +9,19 @@
 ## - Stage and deployment management
 ## --------------------------------------------------
 
+locals {
+  force_redeploy_ap = "cppv2-release-v01"
+
+  # force_redeploy_ap = sha1(jsonencode({
+  #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
+  #   request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
+  #   request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
+  #   integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
+  #   credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
+  #   passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
+  # }))
+}
+
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
   provider = aws.ap
@@ -85,13 +98,39 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_ap" {
 }
 
 
-resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_ap" {
-  provider    = aws.ap
+#####################################################################################################################
+#####################################################################################################################
+
+## Method responses: declare allowed status codes
+resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_method_response_ap" {
+  provider = aws.ap
+
+  for_each    = local.sqs_integration_responses
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
   resource_id = aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id
   http_method = aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method
-  # status_code = "200"
-  status_code = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap.status_code
+  status_code = each.key
+
+  response_parameters = {
+    "method.response.header.x-amz-request-id" = true,
+    "method.response.header.etag"             = true
+  }
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
+## Integration responses: map SQS → client
+resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_ap" {
+  provider = aws.ap
+
+  for_each          = local.sqs_integration_responses
+  rest_api_id       = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
+  resource_id       = aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id
+  http_method       = aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method
+  status_code       = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap[each.key].status_code
+  selection_pattern = try(each.value.selection_pattern, null)
 
   depends_on = [
     aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
@@ -104,26 +143,13 @@ resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_
   }
 
   response_templates = {
-    "application/json" = ""
+    "application/json" = each.value.template
   }
 }
 
-resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_method_response_ap" {
-  provider    = aws.ap
-  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
-  resource_id = aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id
-  http_method = aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method
-  status_code = "200"
+#####################################################################################################################
+#####################################################################################################################
 
-  response_parameters = {
-    "method.response.header.x-amz-request-id" = true,
-    "method.response.header.etag"             = true
-  }
-
-  response_models = {
-    "application/json" = "Empty"
-  }
-}
 
 resource "aws_api_gateway_api_key" "userplatform_cpp_api_key_ap" {
   provider = aws.ap
@@ -151,19 +177,6 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_a
   key_id        = aws_api_gateway_api_key.userplatform_cpp_api_key_ap.id
   key_type      = "API_KEY"
   usage_plan_id = aws_api_gateway_usage_plan.userplatform_cpp_api_usage_plan_ap.id
-}
-
-locals {
-  force_redeploy_ap = "cppv2-release-v01"
-
-  # force_redeploy_ap = sha1(jsonencode({
-  #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
-  #   request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
-  #   request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
-  #   integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
-  #   credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
-  #   passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
-  # }))
 }
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
