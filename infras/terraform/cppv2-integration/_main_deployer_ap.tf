@@ -22,6 +22,26 @@ locals {
   # }))
 }
 
+data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
+  provider = aws.ap
+  name     = "userplatform_cppv2_sqs_ap"
+}
+
+data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_ap" {
+  provider = aws.ap
+  name     = "userplatform_cppv2_sqs_dlq_ap"
+}
+
+data "aws_lambda_function" "cppv2_sqs_lambda_firehose_ap" {
+  provider      = aws.ap
+  function_name = "cppv2_sqs_lambda_firehose_ap"
+}
+
+# Reference the existing bucket
+# data "aws_s3_bucket" "userplatform_bucket_ap" {
+#   bucket = local.route_configs["ap"].bucket
+# }
+
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_ap" {
   provider    = aws.ap
   name        = "userplatform_cpp_rest_api_ap"
