@@ -159,7 +159,7 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_e
 
 
 locals {
-  force_redeploy_eu = "cppv2-release-v01"
+  force_redeploy_eu = "cppv2-release-v02"
 
   # force_redeploy_eu = sha1(jsonencode({
   #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
