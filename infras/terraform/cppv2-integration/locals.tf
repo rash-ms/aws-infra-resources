@@ -36,18 +36,22 @@ EOF
     "400" = {
       selection_pattern = "4\\d{2}"
       template          = <<EOF
-{ "error":"bad_request_SQS", "status":"$context.integration.status", "details":"$util.escapeJavaScript($input.body)" }
+{
+  "error":"bad_request_SQS",
+  "status":"$context.integration.status",
+  "details":"$util.escapeJavaScript($input.body)"
+}
 EOF
     }
     "500" = {
       selection_pattern = "5\\d{2}"
       template          = <<EOF
-{ "error":"internal_failure_SQS", "status":"$context.integration.status", "details":"$util.escapeJavaScript($input.body)" }
+{
+  "error":"internal_failure_SQS",
+  "status":"$context.integration.status",
+  "details":"$util.escapeJavaScript($input.body)"
+}
 EOF
     }
   }
 }
-
-
-# { "error": "Bad request to SQS", "details": "$input.path('$.ErrorMessage')" }
-#{ "error": "SQS internal failure", "details": "$input.path('$.ErrorMessage')" }

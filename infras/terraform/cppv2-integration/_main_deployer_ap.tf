@@ -204,7 +204,8 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_a
 
 
 locals {
-  force_redeploy_ap = timestamp()
+  force_redeploy_ap = cppv2-release-v01
+
   # force_redeploy_ap = sha1(jsonencode({
   #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.uri
   #   request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_templates
