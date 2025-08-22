@@ -137,6 +137,11 @@ resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_metho
   http_method = aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method
   status_code = each.key
 
+  response_parameters = {
+    "method.response.header.x-amz-request-id" = true,
+    "method.response.header.etag"             = true
+  }
+
   response_models = {
     "application/json" = "Empty"
   }
@@ -157,6 +162,11 @@ resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_
     aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap
   ]
+
+  response_parameters = {
+    "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
+    "method.response.header.etag"             = "integration.response.header.ETag"
+  }
 
   response_templates = {
     "application/json" = each.value.template
