@@ -143,7 +143,7 @@ resource "null_resource" "force_put_sqs_integration_ap" {
         --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id} \
         --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
         --status-code ${code} \
-        %{if cfg.selection_pattern != null}--selection-pattern "${cfg.selection_pattern}" \ %{endif}
+        %{if try(cfg.selection_pattern, null) != null}--selection-pattern "${cfg.selection_pattern}" %{endif} \
         --response-templates '{"application/json":"${replace(cfg.template, "\n", "")}"}'
 
       aws apigateway put-method-response \
