@@ -35,13 +35,13 @@ EOF
     }
     "400" = {
       selection_pattern = "4\\d{2}"
-      template = <<EOF
+      template          = <<EOF
 { "error": "Bad request to SQS", "details": "$input.path('$.ErrorMessage')" }
 EOF
     }
     "500" = {
       selection_pattern = "5\\d{2}"
-      template = <<EOF
+      template          = <<EOF
 { "error": "SQS internal failure", "details": "$input.path('$.ErrorMessage')" }
 EOF
     }
