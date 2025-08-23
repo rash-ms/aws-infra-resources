@@ -26,7 +26,7 @@ locals {
 locals {
   sqs_integration_responses = {
     "200" = {
-      selection_pattern = null
+      selection_pattern = null              # "2\\d{2}"
       # success → no selection_pattern
       template = <<EOF
 {
