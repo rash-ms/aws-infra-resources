@@ -10,16 +10,22 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_eu = "cppv2-release-v0.0"
+  force_redeploy_eu = "cppv2-release-v0.1"
+}
 
-  # force_redeploy_ap = sha1(jsonencode({
-  #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
-  #   request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
-  #   request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
-  #   integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
-  #   credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
-  #   passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
-  # }))
+data "aws_sqs_queue" "userplatform_cppv2_sqs_eu" {
+  provider = aws.eu
+  name     = "userplatform_cppv2_sqs_eu"
+}
+
+data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_eu" {
+  provider = aws.eu
+  name     = "userplatform_cppv2_sqs_dlq_eu"
+}
+
+data "aws_lambda_function" "cppv2_sqs_lambda_firehose_eu" {
+  provider      = aws.eu
+  function_name = "cppv2_sqs_lambda_firehose_eu"
 }
 
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_eu" {
@@ -55,44 +61,76 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
   http_method             = aws_api_gateway_method.userplatform_cpp_api_method_eu.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${local.route_configs["eu"].region}:events:path//"
-  credentials             = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+
+  # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
+  uri         = "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
+  credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  passthrough_behavior = "WHEN_NO_TEMPLATES"
+  passthrough_behavior = "NEVER"
 
-  #   request_templates = {
-  #     "application/json" = templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
-  #       event_bus_arn = local.route_configs["eu"].event_bus
-  #       detail_type   = local.route_configs["eu"].route_path
-  #     })
-  #   }
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
+  }
 
   request_templates = {
-    "application/json" = <<EOF
-#set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-#set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-{
-  "Entries": [
-    {
-      "Source": "cpp-api-streamhook",
-      "DetailType": "${local.route_configs["eu"].route_path}",
-      "Detail": "$util.escapeJavaScript($input.body)",
-      "EventBusName": "${local.route_configs["eu"].event_bus}"
-    }
-  ]
-}
-EOF
+    "application/json" = "Action=SendMessage&MessageBody=$input.body"
   }
+
+
+  #   uri                     = "arn:aws:apigateway:${local.route_configs["eu"].region}:events:path//"
+  #   credentials             = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  #
+  #   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
+  #   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
+  #   passthrough_behavior = "WHEN_NO_TEMPLATES"
+  #
+  #   #   request_templates = {
+  #   #     "application/json" = templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
+  #   #       event_bus_arn = local.route_configs["eu"].event_bus
+  #   #       detail_type   = local.route_configs["eu"].route_path
+  #   #     })
+  #   #   }
+  #
+  #   request_templates = {
+  #     "application/json" = <<EOF
+  # #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+  # #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+  # {
+  #   "Entries": [
+  #     {
+  #       "Source": "cpp-api-streamhook",
+  #       "DetailType": "${local.route_configs["eu"].route_path}",
+  #       "Detail": "$util.escapeJavaScript($input.body)",
+  #       "EventBusName": "${local.route_configs["eu"].event_bus}"
+  #     }
+  #   ]
+  # }
+  # EOF
+  #   }
+
+}
+
+moved {
+  from = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_eu
+  to   = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_eu["200"]
+}
+
+moved {
+  from = aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu
+  to   = aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu["200"]
 }
 
 resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_eu" {
-  provider    = aws.eu
-  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id
-  resource_id = aws_api_gateway_resource.userplatform_cpp_api_resource_eu.id
-  http_method = aws_api_gateway_method.userplatform_cpp_api_method_eu.http_method
-  status_code = "200"
+  provider = aws.eu
+
+  for_each          = local.sqs_integration_responses
+  rest_api_id       = aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id
+  resource_id       = aws_api_gateway_resource.userplatform_cpp_api_resource_eu.id
+  http_method       = aws_api_gateway_method.userplatform_cpp_api_method_eu.http_method
+  status_code       = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_eu[each.key].status_code
+  selection_pattern = try(each.value.selection_pattern, null)
 
   depends_on = [
     aws_api_gateway_integration.userplatform_cpp_api_integration_eu,
@@ -105,16 +143,22 @@ resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_
   }
 
   response_templates = {
-    "application/json" = ""
+    "application/json" = each.value.template
+  }
+
+  lifecycle {
+    create_before_destroy = false
   }
 }
 
 resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_method_response_eu" {
-  provider    = aws.eu
+  provider = aws.eu
+
+  for_each    = local.sqs_integration_responses
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id
   resource_id = aws_api_gateway_resource.userplatform_cpp_api_resource_eu.id
   http_method = aws_api_gateway_method.userplatform_cpp_api_method_eu.http_method
-  status_code = "200"
+  status_code = each.key
 
   response_parameters = {
     "method.response.header.x-amz-request-id" = true,
@@ -123,6 +167,10 @@ resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_metho
 
   response_models = {
     "application/json" = "Empty"
+  }
+
+  lifecycle {
+    create_before_destroy = false
   }
 }
 
@@ -164,12 +212,13 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu
   ]
 
-  #   triggers = {
-  #     redeploy_tmpt_changes = sha1(templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
-  #       event_bus_arn = local.route_configs["eu"].event_bus
-  #       detail_type   = local.route_configs["eu"].route_path
-  #     }))
-  #   }
+  triggers = {
+    redeploy = local.force_redeploy_eu
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_eu" {
@@ -341,21 +390,21 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   }
 }
 
-resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_eu" {
-  provider       = aws.eu
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_eu.name
-  arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn
-  role_arn       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.name
-}
-
-resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target_eu" {
-  provider       = aws.eu
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_eu.name
-  arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_eu.arn
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.name
-  depends_on     = [aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_eu]
-}
+# resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_eu" {
+#   provider       = aws.eu
+#   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_eu.name
+#   arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn
+#   role_arn       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.name
+# }
+#
+# resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target_eu" {
+#   provider       = aws.eu
+#   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_eu.name
+#   arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_eu.arn
+#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.name
+#   depends_on     = [aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_eu]
+# }
 
 ## --------------------------------------------------
 ## CLOUDWATCH MONITORING RESOURCES

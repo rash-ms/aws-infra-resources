@@ -12,16 +12,28 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_us = "cppv2-release-v0.0"
+  force_redeploy_us = "cppv2-release-v0.1"
+}
 
-  # force_redeploy_ap = sha1(jsonencode({
-  #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
-  #   request_templates       = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
-  #   request_parameters      = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_parameters
-  #   integration_http_method = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.integration_http_method
-  #   credentials             = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.credentials
-  #   passthrough_behavior    = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior
-  # }))
+
+data "aws_sqs_queue" "userplatform_cppv2_sqs_us" {
+  provider = aws.us
+  name     = "userplatform_cppv2_sqs_us"
+}
+
+data "aws_sqs_queue" "userplatform_cppv2_sqs_dlq_us" {
+  provider = aws.us
+  name     = "userplatform_cppv2_sqs_dlq_us"
+}
+
+data "aws_lambda_function" "cppv2_sqs_lambda_firehose_us" {
+  provider      = aws.us
+  function_name = "cppv2_sqs_lambda_firehose_us"
+}
+
+# Reference the existing bucket
+data "aws_s3_bucket" "userplatform_bucket_us" {
+  bucket = local.route_configs["us"].bucket
 }
 
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_us" {
@@ -57,37 +69,67 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   http_method             = aws_api_gateway_method.userplatform_cpp_api_method_us.http_method
   integration_http_method = "POST"
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${local.route_configs["us"].region}:events:path//"
-  credentials             = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+
+  uri         = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
+  credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  passthrough_behavior = "WHEN_NO_TEMPLATES"
+  passthrough_behavior = "NEVER"
+
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
+  }
 
   request_templates = {
-    "application/json" = <<EOF
-#set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-#set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-{
-  "Entries": [
-    {
-      "Source": "cpp-api-streamhook",
-      "DetailType": "${local.route_configs["us"].route_path}",
-      "Detail": "$util.escapeJavaScript($input.body)",
-      "EventBusName": "${local.route_configs["us"].event_bus}"
-    }
-  ]
-}
-EOF
+    "application/json" = "Action=SendMessage&MessageBody=$input.body"
   }
+
+  #   uri                     = "arn:aws:apigateway:${local.route_configs["us"].region}:events:path//"
+  #   credentials             = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  #
+  #   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
+  #   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
+  #   passthrough_behavior = "WHEN_NO_TEMPLATES"
+  # 
+  #   request_templates = {
+  #     "application/json" = <<EOF
+  # #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+  # #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+  # {
+  #   "Entries": [
+  #     {
+  #       "Source": "cpp-api-streamhook",
+  #       "DetailType": "${local.route_configs["us"].route_path}",
+  #       "Detail": "$util.escapeJavaScript($input.body)",
+  #       "EventBusName": "${local.route_configs["us"].event_bus}"
+  #     }
+  #   ]
+  # }
+  # EOF
+  #   }
+
+}
+
+moved {
+  from = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us
+  to   = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us["200"]
+}
+
+moved {
+  from = aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
+  to   = aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us["200"]
 }
 
 resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_us" {
-  provider    = aws.us
-  rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
-  resource_id = aws_api_gateway_resource.userplatform_cpp_api_resource_us.id
-  http_method = aws_api_gateway_method.userplatform_cpp_api_method_us.http_method
-  status_code = "200"
+  provider = aws.us
+
+  for_each          = local.sqs_integration_responses
+  rest_api_id       = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
+  resource_id       = aws_api_gateway_resource.userplatform_cpp_api_resource_us.id
+  http_method       = aws_api_gateway_method.userplatform_cpp_api_method_us.http_method
+  status_code       = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us[each.key].status_code
+  selection_pattern = try(each.value.selection_pattern, null)
 
   depends_on = [
     aws_api_gateway_integration.userplatform_cpp_api_integration_us,
@@ -100,16 +142,22 @@ resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_
   }
 
   response_templates = {
-    "application/json" = ""
+    "application/json" = each.value.template
+  }
+
+  lifecycle {
+    create_before_destroy = false
   }
 }
 
 resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_method_response_us" {
-  provider    = aws.us
+  provider = aws.us
+
+  for_each    = local.sqs_integration_responses
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
   resource_id = aws_api_gateway_resource.userplatform_cpp_api_resource_us.id
   http_method = aws_api_gateway_method.userplatform_cpp_api_method_us.http_method
-  status_code = "200"
+  status_code = each.key
 
   response_parameters = {
     "method.response.header.x-amz-request-id" = true,
@@ -118,6 +166,10 @@ resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_metho
 
   response_models = {
     "application/json" = "Empty"
+  }
+
+  lifecycle {
+    create_before_destroy = false
   }
 }
 
@@ -159,12 +211,13 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
   ]
 
-  #   triggers = {
-  #     redeploy_tmpt_changes = sha1(templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
-  #       event_bus_arn = local.route_configs["us"].event_bus
-  #       detail_type   = local.route_configs["us"].route_path
-  #     }))
-  #   }
+  triggers = {
+    redeploy = local.force_redeploy_us
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_us" {
@@ -337,21 +390,21 @@ resource "aws_kinesis_firehose_delivery_stream" "userplatform_cpp_firehose_deliv
   }
 }
 
-resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_us" {
-  provider       = aws.us
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
-  arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn
-  role_arn       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
-}
-
-resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target_us" {
-  provider       = aws.us
-  rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
-  arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us.arn
-  event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
-  depends_on     = [aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us]
-}
+# resource "aws_cloudwatch_event_target" "userplatform_cpp_cloudwatch_event_target_us" {
+#   provider       = aws.us
+#   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
+#   arn            = aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn
+#   role_arn       = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
+# }
+#
+# resource "aws_cloudwatch_event_target" "userplatform_cpp_eventbridge_to_log_target_us" {
+#   provider       = aws.us
+#   rule           = aws_cloudwatch_event_rule.userplatform_cpp_eventbridge_to_firehose_rule_us.name
+#   arn            = aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us.arn
+#   event_bus_name = aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.name
+#   depends_on     = [aws_cloudwatch_log_group.userplatform_cpp_event_bus_logs_us]
+# }
 
 ## --------------------------------------------------
 ## CLOUDWATCH MONITORING RESOURCES

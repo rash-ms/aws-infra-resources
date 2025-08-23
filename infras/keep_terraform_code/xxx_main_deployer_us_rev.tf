@@ -193,8 +193,48 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
 #####################################################################################################################
 #####################################################################################################################
 
+moved {
+  from = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us
+  to   = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us["200"]
+}
+
+moved {
+  from = aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
+  to   = aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us["200"]
+}
+
+## Integration responses: map SQS → client
+resource "aws_api_gateway_integration_response" "userplatform_cpp_apigateway_s3_integration_response_us" {
+  provider = aws.us
+
+  for_each          = local.sqs_integration_responses
+  rest_api_id       = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
+  resource_id       = aws_api_gateway_resource.userplatform_cpp_api_resource_us.id
+  http_method       = aws_api_gateway_method.userplatform_cpp_api_method_us.http_method
+  status_code       = aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us[each.key].status_code
+  selection_pattern = try(each.value.selection_pattern, null)
+
+  depends_on = [
+    aws_api_gateway_integration.userplatform_cpp_api_integration_us,
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us
+  ]
+
+  response_parameters = {
+    "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
+    "method.response.header.etag"             = "integration.response.header.ETag"
+  }
+
+  response_templates = {
+    "application/json" = each.value.template
+  }
+
+  lifecycle {
+    create_before_destroy = false
+  }
+}
+
 ## Method responses: declare allowed status codes
-resource "aws_api_gateway_method_response" "userplatform_cpp_api_sqs_mthd_resp_us" {
+resource "aws_api_gateway_method_response" "userplatform_cpp_apigateway_s3_method_response_us" {
   provider = aws.us
 
   for_each    = local.sqs_integration_responses
@@ -211,31 +251,9 @@ resource "aws_api_gateway_method_response" "userplatform_cpp_api_sqs_mthd_resp_u
   response_models = {
     "application/json" = "Empty"
   }
-}
 
-## Integration responses: map SQS → client
-resource "aws_api_gateway_integration_response" "userplatform_cpp_api_sqs_integration_resp_us" {
-  provider = aws.us
-
-  for_each          = local.sqs_integration_responses
-  rest_api_id       = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
-  resource_id       = aws_api_gateway_resource.userplatform_cpp_api_resource_us.id
-  http_method       = aws_api_gateway_method.userplatform_cpp_api_method_us.http_method
-  status_code       = aws_api_gateway_method_response.userplatform_cpp_api_sqs_mthd_resp_us[each.key].status_code
-  selection_pattern = try(each.value.selection_pattern, null)
-
-  depends_on = [
-    aws_api_gateway_integration.userplatform_cpp_api_integration_us,
-    aws_api_gateway_method_response.userplatform_cpp_api_sqs_mthd_resp_us
-  ]
-
-  response_parameters = {
-    "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
-    "method.response.header.etag"             = "integration.response.header.ETag"
-  }
-
-  response_templates = {
-    "application/json" = each.value.template
+  lifecycle {
+    create_before_destroy = false
   }
 }
 
