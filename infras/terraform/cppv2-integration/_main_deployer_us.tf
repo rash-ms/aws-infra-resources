@@ -12,7 +12,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_us = "cppv2-release-v0.1"
+  force_redeploy_us = "cppv2-release-v0.13"
 }
 
 

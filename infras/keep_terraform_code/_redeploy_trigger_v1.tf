@@ -13,7 +13,6 @@ resource "null_resource" "force_put_sqs_integration_us" {
 
   provisioner "local-exec" {
     command     = <<-EOT
-      # Base Integration
       aws apigateway put-integration \
         --region ${local.route_configs["us"].region} \
         --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id} \
@@ -21,7 +20,7 @@ resource "null_resource" "force_put_sqs_integration_us" {
         --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_us.http_method} \
         --type ${aws_api_gateway_integration.userplatform_cpp_api_integration_us.type} \
         --integration-http-method ${aws_api_gateway_integration.userplatform_cpp_api_integration_us.integration_http_method} \
-        --uri arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name} \
+        --uri arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name} \
         --credentials ${aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn} \
         --passthrough-behavior ${aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior} \
         --request-parameters '{"integration.request.header.Content-Type":"'\''application/x-www-form-urlencoded'\''"}' \
@@ -35,16 +34,11 @@ resource "null_resource" "force_put_sqs_integration_us" {
         --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_us.id} \
         --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_us.http_method} \
         --status-code ${code} \
-        %{if cfg.selection_pattern != null}--selection-pattern "${cfg.selection_pattern}" \ %{endif}
-        --response-templates '${cfg.template}'
+        --response-parameters '{"method.response.header.x-amz-request-id":"integration.response.header.x-amz-request-id","method.response.header.etag":"integration.response.header.ETag"}' \
+        --response-templates '{"application/json":""}' \
+        %{if try(cfg.selection_pattern, null) != null}--selection-pattern "${cfg.selection_pattern}" %{endif} \
+        --response-templates '${jsonencode({ "application/json" = cfg.template })}'
 
-      aws apigateway put-method-response \
-        --region ${local.route_configs["us"].region} \
-        --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id} \
-        --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_us.id} \
-        --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_us.http_method} \
-        --status-code ${code} \
-        --response-models '{"application/json":"Empty"}'
       %{endfor~}
     EOT
     interpreter = ["/bin/bash", "-c"]
@@ -67,7 +61,6 @@ resource "null_resource" "force_put_sqs_integration_eu" {
 
   provisioner "local-exec" {
     command     = <<-EOT
-      # Base Integration
       aws apigateway put-integration \
         --region ${local.route_configs["eu"].region} \
         --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id} \
@@ -89,16 +82,11 @@ resource "null_resource" "force_put_sqs_integration_eu" {
         --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_eu.id} \
         --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_eu.http_method} \
         --status-code ${code} \
-        %{if cfg.selection_pattern != null}--selection-pattern "${cfg.selection_pattern}" \ %{endif}
-        --response-templates '${cfg.template}'
+        --response-parameters '{"method.response.header.x-amz-request-id":"integration.response.header.x-amz-request-id","method.response.header.etag":"integration.response.header.ETag"}' \
+        --response-templates '{"application/json":""}' \
+        %{if try(cfg.selection_pattern, null) != null}--selection-pattern "${cfg.selection_pattern}" %{endif} \
+        --response-templates '${jsonencode({ "application/json" = cfg.template })}'
 
-      aws apigateway put-method-response \
-        --region ${local.route_configs["eu"].region} \
-        --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id} \
-        --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_eu.id} \
-        --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_eu.http_method} \
-        --status-code ${code} \
-        --response-models '{"application/json":"Empty"}'
       %{endfor~}
     EOT
     interpreter = ["/bin/bash", "-c"]
@@ -121,7 +109,6 @@ resource "null_resource" "force_put_sqs_integration_ap" {
 
   provisioner "local-exec" {
     command     = <<-EOT
-      # Base Integration
       aws apigateway put-integration \
         --region ${local.route_configs["ap"].region} \
         --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
@@ -143,18 +130,24 @@ resource "null_resource" "force_put_sqs_integration_ap" {
         --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id} \
         --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
         --status-code ${code} \
-        %{if cfg.selection_pattern != null}--selection-pattern "${cfg.selection_pattern}" \ %{endif}
-        --response-templates '${cfg.template}'
+        --response-parameters '{"method.response.header.x-amz-request-id":"integration.response.header.x-amz-request-id","method.response.header.etag":"integration.response.header.ETag"}' \
+        --response-templates '{"application/json":""}' \
+        %{if try(cfg.selection_pattern, null) != null}--selection-pattern "${cfg.selection_pattern}" %{endif} \
+        --response-templates '${jsonencode({ "application/json" = cfg.template })}'
 
-      aws apigateway put-method-response \
-        --region ${local.route_configs["ap"].region} \
-        --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
-        --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id} \
-        --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
-        --status-code ${code} \
-        --response-models '{"application/json":"Empty"}'
       %{endfor~}
     EOT
     interpreter = ["/bin/bash", "-c"]
   }
 }
+
+
+
+#   aws apigateway put-method-response \
+#     --region ${local.route_configs["ap"].region} \
+#     --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
+#     --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id} \
+#     --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
+#     --status-code ${code} \
+#     --response-models '{"application/json":"Empty"}'
+#   %{endfor~}
