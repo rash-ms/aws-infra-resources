@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_ap = "cppv2-release-v0.2"
+  force_redeploy_ap = "cppv2-release-v0.1"
 
   # force_redeploy_ap = sha1(jsonencode({
   #   uri                     = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.uri
@@ -76,48 +76,48 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_ap" {
   integration_http_method = "POST"
   type                    = "AWS"
 
-  # # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
-  # # "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
-  # # "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
-  # uri         = "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
-  # credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  #
-  # # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
-  # # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  # passthrough_behavior = "NEVER"
-  #
-  # request_parameters = {
-  #   "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
-  # }
-  #
-  # request_templates = {
-  #   "application/json" = "Action=SendMessage&MessageBody=$input.body"
-  # }
-
-
-  uri         = "arn:aws:apigateway:${local.route_configs["ap"].region}:events:path//"
+  # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
+  # "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
+  # "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
+  uri         = "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
   credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
 
   # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  passthrough_behavior = "WHEN_NO_TEMPLATES"
+  passthrough_behavior = "NEVER"
+
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
+  }
 
   request_templates = {
-    "application/json" = <<EOF
-  #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-  #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-  {
-    "Entries": [
-      {
-        "Source": "cpp-api-streamhook",
-        "DetailType": "${local.route_configs["ap"].route_path}",
-        "Detail": "$util.escapeJavaScript($input.body)",
-        "EventBusName": "${local.route_configs["ap"].event_bus}"
-      }
-    ]
+    "application/json" = "Action=SendMessage&MessageBody=$input.body"
   }
-  EOF
-  }
+
+
+  # uri         = "arn:aws:apigateway:${local.route_configs["ap"].region}:events:path//"
+  # credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  #
+  # # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
+  # # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
+  # passthrough_behavior = "WHEN_NO_TEMPLATES"
+  #
+  # request_templates = {
+  #   "application/json" = <<EOF
+  # #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+  # #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+  # {
+  #   "Entries": [
+  #     {
+  #       "Source": "cpp-api-streamhook",
+  #       "DetailType": "${local.route_configs["ap"].route_path}",
+  #       "Detail": "$util.escapeJavaScript($input.body)",
+  #       "EventBusName": "${local.route_configs["ap"].event_bus}"
+  #     }
+  #   ]
+  # }
+  # EOF
+  # }
 
 }
 
