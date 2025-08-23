@@ -120,7 +120,7 @@ resource "null_resource" "force_put_sqs_integration_ap" {
   }
 
   provisioner "local-exec" {
-    command     = <<-EOT
+    command = <<-EOT
       # Base Integration
       aws apigateway put-integration \
         --region ${local.route_configs["ap"].region} \
