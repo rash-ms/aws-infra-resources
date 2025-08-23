@@ -120,8 +120,7 @@ resource "null_resource" "force_put_sqs_integration_ap" {
   }
 
   provisioner "local-exec" {
-    command = <<-EOT
-      # Base Integration
+    command     = <<-EOT
       aws apigateway put-integration \
         --region ${local.route_configs["ap"].region} \
         --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
@@ -132,11 +131,13 @@ resource "null_resource" "force_put_sqs_integration_ap" {
         --uri arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name} \
         --credentials ${aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn} \
         --passthrough-behavior ${aws_api_gateway_integration.userplatform_cpp_api_integration_ap.passthrough_behavior} \
-        --request-parameters '{"integration.request.header.Content-Type":"application/x-www-form-urlencoded"}' \
+        --request-parameters '{"integration.request.header.Content-Type":"'\''application/x-www-form-urlencoded'\''"}' \
         --request-templates '{"application/json":"Action=SendMessage&MessageBody=$input.body"}'
     EOT
+    interpreter = ["/bin/bash", "-c"]
   }
 }
+
 
 # # Loop through response configs
 #   %{for code, cfg in local.sqs_integration_responses~}
