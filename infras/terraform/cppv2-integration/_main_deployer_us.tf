@@ -12,7 +12,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_us = "cppv2-release-v0.14"
+  force_redeploy_us = "cppv2-release-v0.15"
 }
 
 
@@ -204,16 +204,16 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_u
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
-  #
-  # depends_on = [
-  #   aws_api_gateway_integration.userplatform_cpp_api_integration_us,
-  #   aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us,
-  #   aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
-  # ]
 
   depends_on = [
-    null_resource.force_put_sqs_integration_us
+    aws_api_gateway_integration.userplatform_cpp_api_integration_us,
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us,
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us
   ]
+
+  # depends_on = [
+  #   null_resource.force_put_sqs_integration_us
+  # ]
 
   triggers = {
     redeploy = local.force_redeploy_us

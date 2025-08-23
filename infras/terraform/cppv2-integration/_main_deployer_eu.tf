@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_eu = "cppv2-release-v0.14"
+  force_redeploy_eu = "cppv2-release-v0.15"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_eu" {
@@ -206,15 +206,15 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
   provider    = aws.eu
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id
 
-  # depends_on = [
-  #   aws_api_gateway_integration.userplatform_cpp_api_integration_eu,
-  #   aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_eu,
-  #   aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu
-  # ]
-
   depends_on = [
-    null_resource.force_put_sqs_integration_eu
+    aws_api_gateway_integration.userplatform_cpp_api_integration_eu,
+    aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_eu,
+    aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu
   ]
+
+  # depends_on = [
+  #   null_resource.force_put_sqs_integration_eu
+  # ]
 
   triggers = {
     redeploy = local.force_redeploy_eu

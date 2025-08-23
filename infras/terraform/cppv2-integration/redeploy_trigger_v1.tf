@@ -2,13 +2,13 @@
 ################################################################      ################################################################
 
 resource "null_resource" "force_put_sqs_integration_us" {
-  # depends_on = [
-  #   aws_api_gateway_stage.userplatform_cpp_api_stage_us,
-  #   aws_api_gateway_deployment.userplatform_cpp_api_deployment_us
-  # ]
   depends_on = [
-    aws_api_gateway_stage.userplatform_cpp_api_stage_us
+    aws_api_gateway_stage.userplatform_cpp_api_stage_us,
+    aws_api_gateway_deployment.userplatform_cpp_api_deployment_us
   ]
+  # depends_on = [
+  #   aws_api_gateway_stage.userplatform_cpp_api_stage_us
+  # ]
   triggers = {
     redeploy = local.force_redeploy_us
   }
@@ -69,6 +69,14 @@ resource "null_resource" "force_put_sqs_integration_us" {
           --response-models '{"application/json":"Empty"}'
       fi
 
+      # Force new deployment to stage
+      aws apigateway create-deployment \
+        --region ${local.route_configs["us"].region} \
+        --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id} \
+        --stage-name ${aws_api_gateway_stage.userplatform_cpp_api_stage_us.stage_name} \
+        --description "Auto-redeploy after updating integration to SQS"
+
+
       %{endfor~}
     EOT
     interpreter = ["/bin/bash", "-c"]
@@ -80,14 +88,14 @@ resource "null_resource" "force_put_sqs_integration_us" {
 
 
 resource "null_resource" "force_put_sqs_integration_eu" {
-  # depends_on = [
-  #   aws_api_gateway_stage.userplatform_cpp_api_stage_eu,
-  #   aws_api_gateway_deployment.userplatform_cpp_api_deployment_eu
-  # ]
-
   depends_on = [
-    aws_api_gateway_stage.userplatform_cpp_api_stage_eu
+    aws_api_gateway_stage.userplatform_cpp_api_stage_eu,
+    aws_api_gateway_deployment.userplatform_cpp_api_deployment_eu
   ]
+
+  # depends_on = [
+  #   aws_api_gateway_stage.userplatform_cpp_api_stage_eu
+  # ]
 
   triggers = {
     redeploy = local.force_redeploy_eu
@@ -149,6 +157,13 @@ resource "null_resource" "force_put_sqs_integration_eu" {
           --response-models '{"application/json":"Empty"}'
       fi
 
+      # Force new deployment to stage
+      aws apigateway create-deployment \
+        --region ${local.route_configs["eu"].region} \
+        --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id} \
+        --stage-name ${aws_api_gateway_stage.userplatform_cpp_api_stage_eu.stage_name} \
+        --description "Auto-redeploy after updating integration to SQS"
+
       %{endfor~}
     EOT
     interpreter = ["/bin/bash", "-c"]
@@ -160,14 +175,14 @@ resource "null_resource" "force_put_sqs_integration_eu" {
 ################################################################      ################################################################
 
 resource "null_resource" "force_put_sqs_integration_ap" {
-  # depends_on = [
-  #   aws_api_gateway_stage.userplatform_cpp_api_stage_ap,
-  #   aws_api_gateway_deployment.userplatform_cpp_api_deployment_ap
-  # ]
-
   depends_on = [
-    aws_api_gateway_stage.userplatform_cpp_api_stage_ap
+    aws_api_gateway_stage.userplatform_cpp_api_stage_ap,
+    aws_api_gateway_deployment.userplatform_cpp_api_deployment_ap
   ]
+
+  # depends_on = [
+  #   aws_api_gateway_stage.userplatform_cpp_api_stage_ap
+  # ]
 
   triggers = {
     redeploy = local.force_redeploy_ap
@@ -228,6 +243,13 @@ resource "null_resource" "force_put_sqs_integration_ap" {
           --status-code ${code} \
           --response-models '{"application/json":"Empty"}'
       fi
+
+      # Force new deployment to stage
+      aws apigateway create-deployment \
+        --region ${local.route_configs["ap"].region} \
+        --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
+        --stage-name ${aws_api_gateway_stage.userplatform_cpp_api_stage_ap.stage_name} \
+        --description "Auto-redeploy after updating integration to SQS"
 
       %{endfor~}
     EOT
