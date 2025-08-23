@@ -142,6 +142,8 @@ resource "null_resource" "force_put_sqs_integration_ap" {
         --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id} \
         --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
         --status-code ${code} \
+        --response-parameters '{"method.response.header.x-amz-request-id":"integration.response.header.x-amz-request-id","method.response.header.etag":"integration.response.header.ETag"}' \
+        --response-templates '{"application/json":""}' \
         %{if try(cfg.selection_pattern, null) != null}--selection-pattern "${cfg.selection_pattern}" %{endif} \
         --response-templates '${jsonencode({ "application/json" = cfg.template })}'
       %{endfor~}
