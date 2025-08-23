@@ -39,6 +39,34 @@ resource "null_resource" "force_put_sqs_integration_us" {
         %{if try(cfg.selection_pattern, null) != null}--selection-pattern "${cfg.selection_pattern}" %{endif} \
         --response-templates '${jsonencode({ "application/json" = cfg.template })}'
 
+      # Upsert Method Responses
+      echo "Ensuring MethodResponse for status ${code}..."
+      if aws apigateway get-method-response \
+        --region ${local.route_configs["us"].region} \
+        --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id} \
+        --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_us.id} \
+        --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_us.http_method} \
+        --status-code ${code} >/dev/null 2>&1; then
+
+        echo "Updating MethodResponse ${code}"
+        aws apigateway update-method-response \
+          --region ${local.route_configs["us"].region} \
+          --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id} \
+          --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_us.id} \
+          --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_us.http_method} \
+          --status-code ${code} \
+          --patch-operations op=replace,path=/responseModels/application~1json,value=Empty
+      else
+        echo "Creating MethodResponse ${code}"
+        aws apigateway put-method-response \
+          --region ${local.route_configs["us"].region} \
+          --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id} \
+          --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_us.id} \
+          --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_us.http_method} \
+          --status-code ${code} \
+          --response-models '{"application/json":"Empty"}'
+      fi
+
       %{endfor~}
     EOT
     interpreter = ["/bin/bash", "-c"]
@@ -87,6 +115,34 @@ resource "null_resource" "force_put_sqs_integration_eu" {
         %{if try(cfg.selection_pattern, null) != null}--selection-pattern "${cfg.selection_pattern}" %{endif} \
         --response-templates '${jsonencode({ "application/json" = cfg.template })}'
 
+      # Upsert Method Responses
+      echo "Ensuring MethodResponse for status ${code}..."
+      if aws apigateway get-method-response \
+        --region ${local.route_configs["eu"].region} \
+        --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id} \
+        --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_eu.id} \
+        --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_eu.http_method} \
+        --status-code ${code} >/dev/null 2>&1; then
+
+        echo "Updating MethodResponse ${code}"
+        aws apigateway update-method-response \
+          --region ${local.route_configs["eu"].region} \
+          --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id} \
+          --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_eu.id} \
+          --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_eu.http_method} \
+          --status-code ${code} \
+          --patch-operations op=replace,path=/responseModels/application~1json,value=Empty
+      else
+        echo "Creating MethodResponse ${code}"
+        aws apigateway put-method-response \
+          --region ${local.route_configs["eu"].region} \
+          --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id} \
+          --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_eu.id} \
+          --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_eu.http_method} \
+          --status-code ${code} \
+          --response-models '{"application/json":"Empty"}'
+      fi
+
       %{endfor~}
     EOT
     interpreter = ["/bin/bash", "-c"]
@@ -134,6 +190,34 @@ resource "null_resource" "force_put_sqs_integration_ap" {
         --response-templates '{"application/json":""}' \
         %{if try(cfg.selection_pattern, null) != null}--selection-pattern "${cfg.selection_pattern}" %{endif} \
         --response-templates '${jsonencode({ "application/json" = cfg.template })}'
+
+      # Upsert Method Responses
+      echo "Ensuring MethodResponse for status ${code}..."
+      if aws apigateway get-method-response \
+        --region ${local.route_configs["ap"].region} \
+        --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
+        --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id} \
+        --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
+        --status-code ${code} >/dev/null 2>&1; then
+
+        echo "Updating MethodResponse ${code}"
+        aws apigateway update-method-response \
+          --region ${local.route_configs["ap"].region} \
+          --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
+          --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id} \
+          --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
+          --status-code ${code} \
+          --patch-operations op=replace,path=/responseModels/application~1json,value=Empty
+      else
+        echo "Creating MethodResponse ${code}"
+        aws apigateway put-method-response \
+          --region ${local.route_configs["ap"].region} \
+          --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
+          --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id} \
+          --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
+          --status-code ${code} \
+          --response-models '{"application/json":"Empty"}'
+      fi
 
       %{endfor~}
     EOT
