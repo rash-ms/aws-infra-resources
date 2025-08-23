@@ -68,6 +68,8 @@ resource "null_resource" "force_put_sqs_integration_us" {
           --response-models '{"application/json":"Empty"}'
       fi
 
+      sleep 10
+
       # Force new deployment to stage
       aws apigateway create-deployment \
         --region ${local.route_configs["us"].region} \
@@ -156,6 +158,8 @@ resource "null_resource" "force_put_sqs_integration_eu" {
           --response-models '{"application/json":"Empty"}'
       fi
 
+      sleep 10
+
       # Force new deployment to stage
       aws apigateway create-deployment \
         --region ${local.route_configs["eu"].region} \
@@ -241,6 +245,8 @@ resource "null_resource" "force_put_sqs_integration_ap" {
           --status-code ${code} \
           --response-models '{"application/json":"Empty"}'
       fi
+
+      sleep 10
 
       # Force new deployment to stage
       aws apigateway create-deployment \
