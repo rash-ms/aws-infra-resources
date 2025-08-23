@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_eu = "cppv2-release-v0.15"
+  force_redeploy_eu = "cppv2-release-v0.11"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_eu" {
@@ -62,53 +62,53 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
   integration_http_method = "POST"
   type                    = "AWS"
 
-  # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
-  uri         = "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
-  credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-
-  # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
-  # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  passthrough_behavior = "NEVER"
-
-  request_parameters = {
-    "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
-  }
-
-  request_templates = {
-    "application/json" = "Action=SendMessage&MessageBody=$input.body"
-  }
-
-
-  # uri         = "arn:aws:apigateway:${local.route_configs["eu"].region}:events:path//"
+  # # ARN format: arn:aws:apigateway:{region}:sqs:path/{account_id}/{queue_name}
+  # uri         = "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
   # credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
   #
   # # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
   # # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
-  # passthrough_behavior = "WHEN_NO_TEMPLATES"
+  # passthrough_behavior = "NEVER"
   #
-  # #   request_templates = {
-  # #     "application/json" = templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
-  # #       event_bus_arn = local.route_configs["eu"].event_bus
-  # #       detail_type   = local.route_configs["eu"].route_path
-  # #     })
-  # #   }
+  # request_parameters = {
+  #   "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
+  # }
   #
   # request_templates = {
-  #   "application/json" = <<EOF
-  # #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-  # #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-  # {
-  #   "Entries": [
-  #     {
-  #       "Source": "cpp-api-streamhook",
-  #       "DetailType": "${local.route_configs["eu"].route_path}",
-  #       "Detail": "$util.escapeJavaScript($input.body)",
-  #       "EventBusName": "${local.route_configs["eu"].event_bus}"
-  #     }
-  #   ]
+  #   "application/json" = "Action=SendMessage&MessageBody=$input.body"
   # }
-  # EOF
-  # }
+
+
+  uri         = "arn:aws:apigateway:${local.route_configs["eu"].region}:events:path//"
+  credentials = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+
+  # WHEN_NO_MATCH: Pass raw request if Content-Type doesn't match any template
+  # WHEN_NO_TEMPLATES: Strict – if any template exists, Content-Type must match exactly
+  passthrough_behavior = "WHEN_NO_TEMPLATES"
+
+  #   request_templates = {
+  #     "application/json" = templatefile("${path.module}/templates/apigateway_reqst_template.tftpl", {
+  #       event_bus_arn = local.route_configs["eu"].event_bus
+  #       detail_type   = local.route_configs["eu"].route_path
+  #     })
+  #   }
+
+  request_templates = {
+    "application/json" = <<EOF
+  #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+  #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+  {
+    "Entries": [
+      {
+        "Source": "cpp-api-streamhook",
+        "DetailType": "${local.route_configs["eu"].route_path}",
+        "Detail": "$util.escapeJavaScript($input.body)",
+        "EventBusName": "${local.route_configs["eu"].event_bus}"
+      }
+    ]
+  }
+  EOF
+  }
 
 }
 
