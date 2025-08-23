@@ -133,6 +133,18 @@ resource "null_resource" "force_put_sqs_integration_ap" {
         --passthrough-behavior ${aws_api_gateway_integration.userplatform_cpp_api_integration_ap.passthrough_behavior} \
         --request-parameters '{"integration.request.header.Content-Type":"'\''application/x-www-form-urlencoded'\''"}' \
         --request-templates '{"application/json":"Action=SendMessage&MessageBody=$input.body"}'
+
+      # Loop through response configs
+      %{for code, cfg in local.sqs_integration_responses~}
+      aws apigateway put-integration-response \
+        --region ${local.route_configs["ap"].region} \
+        --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
+        --resource-id ${aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id} \
+        --http-method ${aws_api_gateway_method.userplatform_cpp_api_method_ap.http_method} \
+        --status-code ${code} \
+        %{if try(cfg.selection_pattern, null) != null}--selection-pattern "${cfg.selection_pattern}" %{endif} \
+        --response-templates '${jsonencode({ "application/json" = cfg.template })}'
+      %{endfor~}
     EOT
     interpreter = ["/bin/bash", "-c"]
   }
@@ -149,7 +161,7 @@ resource "null_resource" "force_put_sqs_integration_ap" {
 #     --status-code ${code} \
 #     %{if try(cfg.selection_pattern, null) != null}--selection-pattern "${cfg.selection_pattern}" %{endif} \
 #     --response-templates '${jsonencode({ "application/json" = cfg.template })}'
-#
+
 #
 #   aws apigateway put-method-response \
 #     --region ${local.route_configs["ap"].region} \
