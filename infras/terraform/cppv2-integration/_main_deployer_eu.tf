@@ -202,7 +202,7 @@ resource "null_resource" "wait_after_integration_eu" {
   }
 
   provisioner "local-exec" {
-    command     = "echo 'Waiting 60s for API Gateway integration to settle...' && sleep 120"
+    command     = "echo 'Waiting 60s for API Gateway integration to settle...' && sleep 60"
     interpreter = ["/bin/bash", "-c"]
   }
 }
