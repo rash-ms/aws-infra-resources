@@ -12,7 +12,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_us = "cppv2-release-v0.14"
+  force_redeploy_us = "cppv2-release-v0.12"
 }
 
 
@@ -200,27 +200,27 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_u
   usage_plan_id = aws_api_gateway_usage_plan.userplatform_cpp_api_usage_plan_us.id
 }
 
-resource "null_resource" "wait_after_integration_us" {
-  depends_on = [
-    aws_api_gateway_integration.userplatform_cpp_api_integration_us
-  ]
-
-  triggers = {
-    redeploy = local.force_redeploy_us
-  }
-
-  provisioner "local-exec" {
-    command     = "echo 'Waiting 60s for API Gateway integration to settle...' && sleep 60"
-    interpreter = ["/bin/bash", "-c"]
-  }
-}
+# resource "null_resource" "wait_after_integration_us" {
+#   depends_on = [
+#     aws_api_gateway_integration.userplatform_cpp_api_integration_us
+#   ]
+#
+#   triggers = {
+#     redeploy = local.force_redeploy_us
+#   }
+#
+#   provisioner "local-exec" {
+#     command     = "echo 'Waiting 60s for API Gateway integration to settle...' && sleep 60"
+#     interpreter = ["/bin/bash", "-c"]
+#   }
+# }
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_us" {
   provider    = aws.us
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id
 
   depends_on = [
-    null_resource.wait_after_integration_us,
+    # null_resource.wait_after_integration_us,
     aws_api_gateway_integration.userplatform_cpp_api_integration_us,
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_us,
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_us

@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_ap = "cppv2-release-v0.14"
+  force_redeploy_ap = "cppv2-release-v0.12"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
@@ -202,20 +202,20 @@ resource "aws_api_gateway_usage_plan_key" "userplatform_cpp_api_usage_plan_key_a
 }
 
 
-resource "null_resource" "wait_after_integration_ap" {
-  depends_on = [
-    aws_api_gateway_integration.userplatform_cpp_api_integration_ap
-  ]
-
-  triggers = {
-    redeploy = local.force_redeploy_ap
-  }
-
-  provisioner "local-exec" {
-    command     = "echo 'Waiting 60s for API Gateway integration to settle...' && sleep 60"
-    interpreter = ["/bin/bash", "-c"]
-  }
-}
+# resource "null_resource" "wait_after_integration_ap" {
+#   depends_on = [
+#     aws_api_gateway_integration.userplatform_cpp_api_integration_ap
+#   ]
+#
+#   triggers = {
+#     redeploy = local.force_redeploy_ap
+#   }
+#
+#   provisioner "local-exec" {
+#     command     = "echo 'Waiting 60s for API Gateway integration to settle...' && sleep 60"
+#     interpreter = ["/bin/bash", "-c"]
+#   }
+# }
 
 
 resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
@@ -223,7 +223,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
   rest_api_id = aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id
 
   depends_on = [
-    null_resource.wait_after_integration_ap,
+    # null_resource.wait_after_integration_ap,
     aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap,
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap
