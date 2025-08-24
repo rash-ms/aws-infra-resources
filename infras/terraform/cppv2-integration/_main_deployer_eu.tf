@@ -94,20 +94,20 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
   # #   }
   #
   # request_templates = {
-    "application/json" = <<EOF
-  #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-  #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-  {
-    "Entries": [
-      {
-        "Source": "cpp-api-streamhook",
-        "DetailType": "${local.route_configs["eu"].route_path}",
-        "Detail": "$util.escapeJavaScript($input.body)",
-        "EventBusName": "${local.route_configs["eu"].event_bus}"
-      }
-    ]
-  }
-  EOF
+  #   "application/json" = <<EOF
+  # #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+  # #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+  # {
+  #   "Entries": [
+  #     {
+  #       "Source": "cpp-api-streamhook",
+  #       "DetailType": "${local.route_configs["eu"].route_path}",
+  #       "Detail": "$util.escapeJavaScript($input.body)",
+  #       "EventBusName": "${local.route_configs["eu"].event_bus}"
+  #     }
+  #   ]
+  # }
+  # EOF
   # }
 
 }
