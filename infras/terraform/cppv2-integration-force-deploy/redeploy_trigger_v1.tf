@@ -1,107 +1,107 @@
-locals {
-  force_redeploy = "cppv2-release-v0.2"
-}
-
-################################################################  US  ################################################################
-################################################################      ################################################################
-
-data "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_us" {
-  provider = aws.us
-  name     = "userplatform_cpp_rest_api_us"
-}
-
-data "aws_api_gateway_resource" "userplatform_cpp_api_resource_us" {
-  provider = aws.us
-  name     = "userplatform_cpp_rest_api_us"
-}
-
-data "aws_api_gateway_method" "userplatform_cpp_rest_api_us" {
-  provider = aws.us
-  name     = "userplatform_cpp_rest_api_us"
-}
-
-resource "null_resource" "force_put_sqs_integration_us" {
-
-  triggers = {
-    redeploy = local.force_redeploy
-  }
-
-  provisioner "local-exec" {
-    command     = <<-EOT
-      sleep 10
-
-      # Force new deployment to stage
-      aws apigateway create-deployment \
-        --region ${local.route_configs["us"].region} \
-        --rest-api-id ${data.aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id} \
-        --stage-name ${var.stage_name} \
-        --description "Auto-redeploy after updating integration to SQS"
-    EOT
-    interpreter = ["/bin/bash", "-c"]
-  }
-
-}
-
-################################################################  EMEA  ################################################################
-################################################################      ################################################################
-
-data "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_eu" {
-  provider = aws.eu
-  name     = "userplatform_cpp_rest_api_eu"
-}
-
-resource "null_resource" "force_put_sqs_integration_eu" {
-
-  triggers = {
-    redeploy = local.force_redeploy
-  }
-
-  provisioner "local-exec" {
-    command     = <<-EOT
-      sleep 10
-
-      # Force new deployment to stage
-      aws apigateway create-deployment \
-        --region ${local.route_configs["eu"].region} \
-        --rest-api-id ${data.aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id} \
-        --stage-name ${var.stage_name} \
-        --description "Auto-redeploy after updating integration to SQS"
-    EOT
-    interpreter = ["/bin/bash", "-c"]
-  }
-}
-
-
-################################################################  APAC  ################################################################
-################################################################      ################################################################
-
-data "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_ap" {
-  provider = aws.ap
-  name     = "userplatform_cpp_rest_api_ap"
-}
-
-resource "null_resource" "force_put_sqs_integration_ap" {
-
-  triggers = {
-    redeploy = local.force_redeploy
-  }
-
-  provisioner "local-exec" {
-    command     = <<-EOT
-
-      sleep 10
-
-      # Force new deployment to stage
-      aws apigateway create-deployment \
-        --region ${local.route_configs["ap"].region} \
-        --rest-api-id ${data.aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
-        --stage-name ${var.stage_name} \
-        --description "Auto-redeploy after updating integration to SQS"
-
-    EOT
-    interpreter = ["/bin/bash", "-c"]
-  }
-}
+# locals {
+#   force_redeploy = "cppv2-release-v0.2"
+# }
+#
+# ################################################################  US  ################################################################
+# ################################################################      ################################################################
+#
+# data "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_us" {
+#   provider = aws.us
+#   name     = "userplatform_cpp_rest_api_us"
+# }
+#
+# data "aws_api_gateway_resource" "userplatform_cpp_api_resource_us" {
+#   provider = aws.us
+#   name     = "userplatform_cpp_rest_api_us"
+# }
+#
+# data "aws_api_gateway_method" "userplatform_cpp_rest_api_us" {
+#   provider = aws.us
+#   name     = "userplatform_cpp_rest_api_us"
+# }
+#
+# resource "null_resource" "force_put_sqs_integration_us" {
+#
+#   triggers = {
+#     redeploy = local.force_redeploy
+#   }
+#
+#   provisioner "local-exec" {
+#     command     = <<-EOT
+#       sleep 10
+#
+#       # Force new deployment to stage
+#       aws apigateway create-deployment \
+#         --region ${local.route_configs["us"].region} \
+#         --rest-api-id ${data.aws_api_gateway_rest_api.userplatform_cpp_rest_api_us.id} \
+#         --stage-name ${var.stage_name} \
+#         --description "Auto-redeploy after updating integration to SQS"
+#     EOT
+#     interpreter = ["/bin/bash", "-c"]
+#   }
+#
+# }
+#
+# ################################################################  EMEA  ################################################################
+# ################################################################      ################################################################
+#
+# data "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_eu" {
+#   provider = aws.eu
+#   name     = "userplatform_cpp_rest_api_eu"
+# }
+#
+# resource "null_resource" "force_put_sqs_integration_eu" {
+#
+#   triggers = {
+#     redeploy = local.force_redeploy
+#   }
+#
+#   provisioner "local-exec" {
+#     command     = <<-EOT
+#       sleep 10
+#
+#       # Force new deployment to stage
+#       aws apigateway create-deployment \
+#         --region ${local.route_configs["eu"].region} \
+#         --rest-api-id ${data.aws_api_gateway_rest_api.userplatform_cpp_rest_api_eu.id} \
+#         --stage-name ${var.stage_name} \
+#         --description "Auto-redeploy after updating integration to SQS"
+#     EOT
+#     interpreter = ["/bin/bash", "-c"]
+#   }
+# }
+#
+#
+# ################################################################  APAC  ################################################################
+# ################################################################      ################################################################
+#
+# data "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_ap" {
+#   provider = aws.ap
+#   name     = "userplatform_cpp_rest_api_ap"
+# }
+#
+# resource "null_resource" "force_put_sqs_integration_ap" {
+#
+#   triggers = {
+#     redeploy = local.force_redeploy
+#   }
+#
+#   provisioner "local-exec" {
+#     command     = <<-EOT
+#
+#       sleep 10
+#
+#       # Force new deployment to stage
+#       aws apigateway create-deployment \
+#         --region ${local.route_configs["ap"].region} \
+#         --rest-api-id ${data.aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
+#         --stage-name ${var.stage_name} \
+#         --description "Auto-redeploy after updating integration to SQS"
+#
+#     EOT
+#     interpreter = ["/bin/bash", "-c"]
+#   }
+# }
 
 # resource "null_resource" "force_put_sqs_integration_ap" {
 #   depends_on = [
