@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_ap = "cppv2-release-v0.17"
+  force_redeploy_ap = "cppv2-release-v0.10"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
@@ -230,7 +230,10 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
   ]
 
   triggers = {
-    redeploy = local.force_redeploy_ap
+    redeploy = sha1(jsonencode({
+      templates = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_templates
+      force     = local.force_redeploy_ap
+    }))
   }
 
   lifecycle {
