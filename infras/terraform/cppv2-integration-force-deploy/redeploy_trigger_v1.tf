@@ -1,5 +1,5 @@
 locals {
-  force_redeploy = "cppv2-release-v0.1"
+  force_redeploy = "cppv2-release-v0.2"
 }
 
 data "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_us" {
@@ -81,7 +81,7 @@ resource "null_resource" "force_put_sqs_integration_ap" {
   provisioner "local-exec" {
     command     = <<-EOT
 
-      sleep 120
+      sleep 10
 
       # Force new deployment to stage
       aws apigateway create-deployment \
