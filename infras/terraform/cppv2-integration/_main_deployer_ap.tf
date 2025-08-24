@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_ap = "cppv2-release-v0.10"
+  force_redeploy_ap = "cppv2-release-v0.19"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
