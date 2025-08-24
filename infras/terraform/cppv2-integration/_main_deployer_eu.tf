@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_eu = "cppv2-release-v0.19"
+  force_redeploy_eu = "cppv2-release-v0.10"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_eu" {
@@ -65,14 +65,14 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
   type                    = "AWS"
 
   ## EVENTBRIDGE INTEGRATION
-  uri                  = "arn:aws:apigateway:${local.route_configs["eu"].region}:events:path//"
-  credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  passthrough_behavior = "WHEN_NO_TEMPLATES"
+  # uri                  = "arn:aws:apigateway:${local.route_configs["eu"].region}:events:path//"
+  # credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  # passthrough_behavior = "WHEN_NO_TEMPLATES"
 
   ## SQS INTEGRATION
-  # uri                  = "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
-  # credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  # passthrough_behavior = "NEVER"
+  uri                  = "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
+  credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  passthrough_behavior = "NEVER"
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
@@ -80,22 +80,22 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
 
   request_templates = {
 
-    # "application/json" = "Action=SendMessage&MessageBody=$input.body"
+    "application/json" = "Action=SendMessage&MessageBody=$input.body"
 
-    "application/json" = <<EOF
-  #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-  #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-  {
-    "Entries": [
-      {
-        "Source": "cpp-api-streamhook",
-        "DetailType": "${local.route_configs["eu"].route_path}",
-        "Detail": "$util.escapeJavaScript($input.body)",
-        "EventBusName": "${local.route_configs["eu"].event_bus}"
-      }
-    ]
-  }
-  EOF
+    #   "application/json" = <<EOF
+    # #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+    # #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+    # {
+    #   "Entries": [
+    #     {
+    #       "Source": "cpp-api-streamhook",
+    #       "DetailType": "${local.route_configs["eu"].route_path}",
+    #       "Detail": "$util.escapeJavaScript($input.body)",
+    #       "EventBusName": "${local.route_configs["eu"].event_bus}"
+    #     }
+    #   ]
+    # }
+    # EOF
 
   }
 
