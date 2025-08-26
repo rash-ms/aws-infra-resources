@@ -80,29 +80,29 @@ moved {
 #   integration_http_method = "POST"
 #   type                    = "AWS"
 
-  # ## EVENTBRIDGE INTEGRATION
-  # uri                  = "arn:aws:apigateway:${local.route_configs["ap"].region}:events:path//"
-  # credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  # passthrough_behavior = "WHEN_NO_TEMPLATES"
-  #
-  # request_templates = {
-  #
-  #   "application/json" = <<EOF
-  #   #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-  #   #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-  #   {
-  #     "Entries": [
-  #       {
-  #         "Source": "cpp-api-streamhook",
-  #         "DetailType": "${local.route_configs["ap"].route_path}",
-  #         "Detail": "$util.escapeJavaScript($input.body)",
-  #         "EventBusName": "${local.route_configs["ap"].event_bus}"
-  #       }
-  #     ]
-  #   }
-  #   EOF
-  #
-  # }
+# ## EVENTBRIDGE INTEGRATION
+# uri                  = "arn:aws:apigateway:${local.route_configs["ap"].region}:events:path//"
+# credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+# passthrough_behavior = "WHEN_NO_TEMPLATES"
+#
+# request_templates = {
+#
+#   "application/json" = <<EOF
+#   #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+#   #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+#   {
+#     "Entries": [
+#       {
+#         "Source": "cpp-api-streamhook",
+#         "DetailType": "${local.route_configs["ap"].route_path}",
+#         "Detail": "$util.escapeJavaScript($input.body)",
+#         "EventBusName": "${local.route_configs["ap"].event_bus}"
+#       }
+#     ]
+#   }
+#   EOF
+#
+# }
 
 #   lifecycle {
 #     create_before_destroy = false
