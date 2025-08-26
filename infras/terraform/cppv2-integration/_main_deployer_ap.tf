@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_ap = "cppv2-release-v0.5"
+  force_redeploy_ap = "cppv2-release-v0.2"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
@@ -228,7 +228,7 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
 
   depends_on = [
     # null_resource.wait_after_integration_ap,
-    aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
+    # aws_api_gateway_integration.userplatform_cpp_api_integration_ap,
     aws_api_gateway_method_response.userplatform_cpp_apigateway_s3_method_response_ap,
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_ap
   ]
@@ -245,9 +245,9 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
 
   lifecycle {
     create_before_destroy = true
-    # replace_triggered_by = [
-    #   aws_api_gateway_integration.userplatform_cpp_api_integration_ap.id
-    # ]
+    replace_triggered_by = [
+      aws_api_gateway_integration.userplatform_cpp_api_integration_ap.id
+    ]
   }
 }
 
