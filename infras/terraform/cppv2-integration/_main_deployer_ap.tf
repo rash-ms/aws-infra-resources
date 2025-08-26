@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_ap = "cppv2-release-v0.2"
+  force_redeploy_ap = "cppv2-release-v0.3"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
@@ -32,6 +32,7 @@ data "aws_lambda_function" "cppv2_sqs_lambda_firehose_ap" {
 # data "aws_s3_bucket" "userplatform_bucket_ap" {
 #   bucket = local.route_configs["ap"].bucket
 # }
+
 
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_ap" {
   provider    = aws.ap
