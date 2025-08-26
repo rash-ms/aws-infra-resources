@@ -10,7 +10,7 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_ap = "cppv2-release-v0.4"
+  force_redeploy_ap = "cppv2-release-v0.2"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
@@ -235,17 +235,20 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
 
   triggers = {
     redeploy = sha1(jsonencode({
-      templates = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_templates
-      force     = local.force_redeploy_ap
+      templates   = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_templates,
+      resources   = aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id,
+      method      = aws_api_gateway_method.userplatform_cpp_api_method_ap.id,
+      integration = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.id,
+      force       = local.force_redeploy_ap
     }))
   }
 
-  # lifecycle {
-  #   create_before_destroy = true
-  #   replace_triggered_by = [
-  #     aws_api_gateway_integration.userplatform_cpp_api_integration_ap.id
-  #   ]
-  # }
+  lifecycle {
+    create_before_destroy = true
+    replace_triggered_by = [
+      aws_api_gateway_integration.userplatform_cpp_api_integration_ap.id
+    ]
+  }
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {
@@ -276,7 +279,9 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {
   }
   xray_tracing_enabled = true
   depends_on = [
-  aws_api_gateway_account.userplatform_cpp_api_account_settings_ap]
+    aws_api_gateway_account.userplatform_cpp_api_account_settings_ap,
+    aws_api_gateway_deployment.userplatform_cpp_api_deployment_ap
+  ]
 }
 
 resource "aws_api_gateway_method_settings" "userplatform_cpp_apigateway_method_settings_ap" {
