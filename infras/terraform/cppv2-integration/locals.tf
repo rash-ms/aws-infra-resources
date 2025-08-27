@@ -31,6 +31,8 @@ locals {
       template = <<EOF
 #set($r = $util.parseJson($input.body))
 {
+  "status": "success",
+  "integration_type": "SQS",
   "messageId": "$util.escapeJavaScript($r.SendMessageResponse.SendMessageResult.MessageId)"
 }
 EOF
@@ -39,8 +41,9 @@ EOF
       selection_pattern = "4\\d{2}"
       template          = <<EOF
 {
-  "error":"bad_request_SQS",
-  "status":"$context.integration.status",
+  "status": "error",
+  "error_type": "bad_request",
+  "integration_type": "SQS",
   "details":"$util.escapeJavaScript($input.body)"
 }
 EOF
@@ -49,8 +52,9 @@ EOF
       selection_pattern = "5\\d{2}"
       template          = <<EOF
 {
-  "error":"internal_failure_SQS",
-  "status":"$context.integration.status",
+  "status": "error",
+  "error_type": "internal_failure",
+  "integration_type": "SQS",
   "details":"$util.escapeJavaScript($input.body)"
 }
 EOF
