@@ -162,7 +162,7 @@
 #
 # ################################################################  APAC  ################################################################
 # ################################################################      ################################################################
-#
+
 # resource "null_resource" "force_put_sqs_integration_ap" {
 #   depends_on = [
 #     aws_api_gateway_stage.userplatform_cpp_api_stage_ap,
@@ -234,7 +234,17 @@
 #         --response-templates '${jsonencode({ "application/json" = cfg.template })}'
 #
 #       %{endfor~}
+#
+#       sleep 10
+#
+#       # Force new deployment to stage
+#       aws apigateway create-deployment \
+#         --region ${local.route_configs["ap"].region} \
+#         --rest-api-id ${aws_api_gateway_rest_api.userplatform_cpp_rest_api_ap.id} \
+#         --stage-name ${var.stage_name} \
+#         --description "Auto-redeploy after updating integration to SQS"
+#
 #     EOT
 #     interpreter = ["/bin/bash", "-c"]
 #   }
-# }
+}
