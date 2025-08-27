@@ -11,10 +11,10 @@
 
 locals {
   # Increment for new changes in APIGW
-  force_apigw_ap = "ap-v0.1"
+  force_apigw_ap = "ap-v0.2"
 
   # Increment to overwrite APIGW Integration (CLI Deployment: `redeploy_trigger_v1.tf`)
-  force_apigw_cli_ap = "cli-ap-v0.1"
+  force_apigw_cli_ap = "cli-ap-v0.2"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
@@ -92,9 +92,16 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_ap" {
     "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
   }
 
+
   request_templates = {
 
-    "application/json" = "Action=SendMessage&MessageBody=$input.body"
+    # "application/json" = "Action=SendMessage&MessageBody=$input.body"
+
+
+    "application/json" = <<EOF
+Action=SendMessage&MessageBody=$util.urlEncode($input.body)
+EOF
+
 
     # "application/json" = <<EOF
     #   #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
@@ -244,7 +251,6 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
       force = local.force_apigw_ap
     }))
   }
-
 
   lifecycle {
     create_before_destroy = true

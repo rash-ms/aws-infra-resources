@@ -13,10 +13,10 @@
 
 locals {
   # Increment for new changes in APIGW
-  force_apigw_us = "us-v0.1"
+  force_apigw_us = "us-v0.2"
 
   # Increment to overwrite APIGW Integration (CLI Deployment: `redeploy_trigger_v1.tf`)
-  force_apigw_cli_us = "cli-us-v0.1"
+  force_apigw_cli_us = "cli-us-v0.2"
 }
 
 
@@ -93,7 +93,11 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
 
   request_templates = {
 
-    "application/json" = "Action=SendMessage&MessageBody=$input.body"
+    # "application/json" = "Action=SendMessage&MessageBody=$input.body"
+
+    "application/json" = <<EOF
+Action=SendMessage&MessageBody=$util.urlEncode($input.body)
+EOF
 
     # "application/json" = <<EOF
     # #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")

@@ -11,6 +11,8 @@ resource "null_resource" "force_put_sqs_integration_us" {
     redeploy = sha1(local.force_apigw_cli_us)
   }
 
+  #         --request-templates '{"application/json":"Action=SendMessage&MessageBody=$input.body"}'
+
   provisioner "local-exec" {
     command     = <<-EOT
       aws apigateway put-integration \
@@ -24,7 +26,7 @@ resource "null_resource" "force_put_sqs_integration_us" {
         --credentials ${aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn} \
         --passthrough-behavior ${aws_api_gateway_integration.userplatform_cpp_api_integration_us.passthrough_behavior} \
         --request-parameters '{"integration.request.header.Content-Type":"'\''application/x-www-form-urlencoded'\''"}' \
-        --request-templates '{"application/json":"Action=SendMessage&MessageBody=$input.body"}'
+        --request-templates '{"application/json":"Action=SendMessage&MessageBody=$util.urlEncode($input.body)"}'
 
       # Loop through response configs
       %{for code, cfg in local.sqs_integration_responses~}
@@ -102,6 +104,8 @@ resource "null_resource" "force_put_sqs_integration_eu" {
     redeploy = sha1(local.force_apigw_cli_eu)
   }
 
+  # --request-templates '{"application/json":"Action=SendMessage&MessageBody=$input.body"}'
+
   provisioner "local-exec" {
     command     = <<-EOT
       aws apigateway put-integration \
@@ -115,7 +119,7 @@ resource "null_resource" "force_put_sqs_integration_eu" {
         --credentials ${aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn} \
         --passthrough-behavior ${aws_api_gateway_integration.userplatform_cpp_api_integration_eu.passthrough_behavior} \
         --request-parameters '{"integration.request.header.Content-Type":"'\''application/x-www-form-urlencoded'\''"}' \
-        --request-templates '{"application/json":"Action=SendMessage&MessageBody=$input.body"}'
+        --request-templates '{"application/json":"Action=SendMessage&MessageBody=$util.urlEncode($input.body)"}'
 
       # Loop through response configs
       %{for code, cfg in local.sqs_integration_responses~}
@@ -193,6 +197,8 @@ resource "null_resource" "force_put_sqs_integration_ap" {
     redeploy = sha1(local.force_apigw_cli_ap)
   }
 
+  # --request-templates '{"application/json":"Action=SendMessage&MessageBody=$input.body"}'
+
   provisioner "local-exec" {
     command     = <<-EOT
       aws apigateway put-integration \
@@ -206,7 +212,7 @@ resource "null_resource" "force_put_sqs_integration_ap" {
         --credentials ${aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn} \
         --passthrough-behavior ${aws_api_gateway_integration.userplatform_cpp_api_integration_ap.passthrough_behavior} \
         --request-parameters '{"integration.request.header.Content-Type":"'\''application/x-www-form-urlencoded'\''"}' \
-        --request-templates '{"application/json":"Action=SendMessage&MessageBody=$input.body"}'
+        --request-templates '{"application/json":"Action=SendMessage&MessageBody=$util.urlEncode($input.body)"}'
 
       # Loop through response configs
       %{for code, cfg in local.sqs_integration_responses~}
