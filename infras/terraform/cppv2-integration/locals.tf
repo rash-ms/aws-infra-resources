@@ -29,8 +29,9 @@ locals {
       selection_pattern = null # "2\\d{2}"
       # success → no selection_pattern
       template = <<EOF
+#set($r = $util.parseJson($input.body))
 {
-  "messageId": "$input.path(\"$.SendMessageResponse.SendMessageResult.MessageId\")"
+  "messageId": "$util.escapeJavaScript($r.SendMessageResponse.SendMessageResult.MessageId)"
 }
 EOF
     }
@@ -57,4 +58,42 @@ EOF
   }
 }
 
+
+
+
 #   "messageId": "$input.path('$.SendMessageResponse.SendMessageResult.MessageId')"
+
+
+# locals {
+#   sqs_integration_responses = {
+#     "200" = {
+#       selection_pattern = null # "2\\d{2}"
+#       # success → no selection_pattern
+#       template = <<EOF
+# {
+#   "messageId": "$input.path(\"$.SendMessageResponse.SendMessageResult.MessageId\")"
+# }
+# EOF
+#     }
+#     "400" = {
+#       selection_pattern = "4\\d{2}"
+#       template          = <<EOF
+# {
+#   "error":"bad_request_SQS",
+#   "status":"$context.integration.status",
+#   "details":"$util.escapeJavaScript($input.body)"
+# }
+# EOF
+#     }
+#     "500" = {
+#       selection_pattern = "5\\d{2}"
+#       template          = <<EOF
+# {
+#   "error":"internal_failure_SQS",
+#   "status":"$context.integration.status",
+#   "details":"$util.escapeJavaScript($input.body)"
+# }
+# EOF
+#     }
+#   }
+# }
