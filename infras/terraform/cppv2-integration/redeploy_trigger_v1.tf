@@ -231,7 +231,7 @@ resource "null_resource" "force_put_sqs_integration_ap" {
         --status-code ${code} \
         --response-parameters '{"method.response.header.x-amz-request-id":"integration.response.header.x-amz-request-id","method.response.header.etag":"integration.response.header.ETag"}' \
         %{if try(cfg.selection_pattern, null) != null}--selection-pattern "${cfg.selection_pattern}" %{endif} \
-        --response-templates '${jsonencode({ "application/json" = cfg.template })}'
+        --response-templates ${jsonencode({ "application/json" = cfg.template })}
 
       %{endfor~}
 
@@ -248,3 +248,5 @@ resource "null_resource" "force_put_sqs_integration_ap" {
     interpreter = ["/bin/bash", "-c"]
   }
 }
+
+#         --response-templates '${jsonencode({ "application/json" = cfg.template })}'
