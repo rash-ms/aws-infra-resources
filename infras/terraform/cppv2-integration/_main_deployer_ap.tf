@@ -10,10 +10,11 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_ap = "cppv2-release-v0.2"
+  # Increment for new changes in APIGW
+  force_apigw_ap = "ap-v0.1"
 
-  # Only use to force APIGW Integration CLI Deployment
-  # force_apigw_cli_ap = "cppv2-cli-v0.1"
+  # Increment to overwrite APIGW Integration (CLI Deployment: `redeploy_trigger_v1.tf`)
+  force_apigw_cli_ap = "cli-ap-v0.1"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
@@ -78,14 +79,14 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_ap" {
   type                    = "AWS"
 
   ## EVENTBRIDGE INTEGRATION
-  uri                  = "arn:aws:apigateway:${local.route_configs["ap"].region}:events:path//"
-  credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  passthrough_behavior = "WHEN_NO_TEMPLATES"
+  # uri                  = "arn:aws:apigateway:${local.route_configs["ap"].region}:events:path//"
+  # credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  # passthrough_behavior = "WHEN_NO_TEMPLATES"
 
   ## SQS INTEGRATION
-  # uri                  = "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
-  # credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  # passthrough_behavior = "NEVER"
+  uri                  = "arn:aws:apigateway:${local.route_configs["ap"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_ap.name}"
+  credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  passthrough_behavior = "NEVER"
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
@@ -93,22 +94,22 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_ap" {
 
   request_templates = {
 
-    # "application/json" = "Action=SendMessage&MessageBody=$input.body"
+    "application/json" = "Action=SendMessage&MessageBody=$input.body"
 
-    "application/json" = <<EOF
-      #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-      #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-      {
-        "Entries": [
-          {
-            "Source": "cpp-api-streamhook",
-            "DetailType": "${local.route_configs["ap"].route_path}",
-            "Detail": "$util.escapeJavaScript($input.body)",
-            "EventBusName": "${local.route_configs["ap"].event_bus}"
-          }
-        ]
-      }
-      EOF
+    # "application/json" = <<EOF
+    #   #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+    #   #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+    #   {
+    #     "Entries": [
+    #       {
+    #         "Source": "cpp-api-streamhook",
+    #         "DetailType": "${local.route_configs["ap"].route_path}",
+    #         "Detail": "$util.escapeJavaScript($input.body)",
+    #         "EventBusName": "${local.route_configs["ap"].event_bus}"
+    #       }
+    #     ]
+    #   }
+    #   EOF
 
   }
 
@@ -240,20 +241,15 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_ap" {
 
   triggers = {
     redeploy = sha1(jsonencode({
-      templates   = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.request_templates,
-      resources   = aws_api_gateway_resource.userplatform_cpp_api_resource_ap.id,
-      method      = aws_api_gateway_method.userplatform_cpp_api_method_ap.id,
-      integration = aws_api_gateway_integration.userplatform_cpp_api_integration_ap.id,
-      force       = local.force_redeploy_ap
+      force = local.force_apigw_ap
     }))
   }
 
+
   lifecycle {
     create_before_destroy = true
-    replace_triggered_by = [
-      aws_api_gateway_integration.userplatform_cpp_api_integration_ap.id
-    ]
   }
+
 }
 
 resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {

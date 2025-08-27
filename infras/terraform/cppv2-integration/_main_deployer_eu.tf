@@ -10,11 +10,13 @@
 ## --------------------------------------------------
 
 locals {
-  force_redeploy_eu = "cppv2-release-v0.2"
+  # Increment for new changes in APIGW
+  force_apigw_eu = "eu-v0.1"
 
-  # Only use to force APIGW Integration CLI Deployment
-  # force_apigw_cli_eu = "cppv2-cli-v0.1"
+  # Increment to overwrite APIGW Integration (CLI Deployment: `redeploy_trigger_v1.tf`)
+  force_apigw_cli_eu = "cli-eu-v0.1"
 }
+
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_eu" {
   provider = aws.eu
@@ -68,14 +70,14 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
   type                    = "AWS"
 
   ## EVENTBRIDGE INTEGRATION
-  uri                  = "arn:aws:apigateway:${local.route_configs["eu"].region}:events:path//"
-  credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  passthrough_behavior = "WHEN_NO_TEMPLATES"
+  # uri                  = "arn:aws:apigateway:${local.route_configs["eu"].region}:events:path//"
+  # credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  # passthrough_behavior = "WHEN_NO_TEMPLATES"
 
   ## SQS INTEGRATION
-  # uri                  = "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
-  # credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
-  # passthrough_behavior = "NEVER"
+  uri                  = "arn:aws:apigateway:${local.route_configs["eu"].region}:sqs:path/${data.aws_sqs_queue.userplatform_cppv2_sqs_eu.name}"
+  credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
+  passthrough_behavior = "NEVER"
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/x-www-form-urlencoded'"
@@ -83,22 +85,22 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_eu" {
 
   request_templates = {
 
-    # "application/json" = "Action=SendMessage&MessageBody=$input.body"
+    "application/json" = "Action=SendMessage&MessageBody=$input.body"
 
-    "application/json" = <<EOF
-    #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
-    #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
-    {
-      "Entries": [
-        {
-          "Source": "cpp-api-streamhook",
-          "DetailType": "${local.route_configs["eu"].route_path}",
-          "Detail": "$util.escapeJavaScript($input.body)",
-          "EventBusName": "${local.route_configs["eu"].event_bus}"
-        }
-      ]
-    }
-    EOF
+    # "application/json" = <<EOF
+    # #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
+    # #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
+    # {
+    #   "Entries": [
+    #     {
+    #       "Source": "cpp-api-streamhook",
+    #       "DetailType": "${local.route_configs["eu"].route_path}",
+    #       "Detail": "$util.escapeJavaScript($input.body)",
+    #       "EventBusName": "${local.route_configs["eu"].event_bus}"
+    #     }
+    #   ]
+    # }
+    # EOF
 
   }
 
@@ -221,14 +223,9 @@ resource "aws_api_gateway_deployment" "userplatform_cpp_api_deployment_eu" {
     aws_api_gateway_integration_response.userplatform_cpp_apigateway_s3_integration_response_eu
   ]
 
-  # triggers = {
-  #   redeploy = local.force_redeploy_eu
-  # }
-
   triggers = {
     redeploy = sha1(jsonencode({
-      templates = aws_api_gateway_integration.userplatform_cpp_api_integration_eu.request_templates
-      force     = local.force_redeploy_eu
+      force = local.force_apigw_eu
     }))
   }
 
