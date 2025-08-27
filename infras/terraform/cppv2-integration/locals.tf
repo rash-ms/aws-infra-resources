@@ -30,7 +30,7 @@ locals {
       # success → no selection_pattern
       template = <<EOF
 {
-  "messageId": "$input.path('$.SendMessageResponse.SendMessageResult.MessageId')"
+  "messageId": "$input.path(\"$.SendMessageResponse.SendMessageResult.MessageId\")"
 }
 EOF
     }
@@ -56,3 +56,5 @@ EOF
     }
   }
 }
+
+#   "messageId": "$input.path('$.SendMessageResponse.SendMessageResult.MessageId')"
