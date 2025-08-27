@@ -11,6 +11,9 @@
 
 locals {
   force_redeploy_eu = "cppv2-release-v0.6"
+
+  # Only use to force APIGW Integration CLI Deployment
+  # force_apigw_cli_eu = "cppv2-cli-v0.1"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_eu" {

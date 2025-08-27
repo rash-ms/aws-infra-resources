@@ -13,6 +13,9 @@
 
 locals {
   force_redeploy_us = "cppv2-release-v0.6"
+
+  # Only use to force APIGW Integration CLI Deployment
+  # force_apigw_cli_us = "cppv2-cli-v0.1"
 }
 
 

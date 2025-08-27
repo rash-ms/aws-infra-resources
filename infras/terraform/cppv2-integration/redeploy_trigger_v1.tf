@@ -8,7 +8,7 @@
 #   ]
 #
 #   triggers = {
-#     redeploy = local.force_redeploy_us
+#       redeploy = sha1(local.force_apigw_cli_us)
 #   }
 #
 #   provisioner "local-exec" {
@@ -99,7 +99,7 @@
 #   ]
 #
 #   triggers = {
-#     redeploy = local.force_redeploy_eu
+#     redeploy = sha1(local.force_apigw_cli_eu)
 #   }
 #
 #   provisioner "local-exec" {
@@ -190,7 +190,7 @@
 #   ]
 #
 #   triggers = {
-#     redeploy = local.force_redeploy_ap
+#     redeploy = sha1(local.force_apigw_cli_ap)
 #   }
 #
 #   provisioner "local-exec" {
