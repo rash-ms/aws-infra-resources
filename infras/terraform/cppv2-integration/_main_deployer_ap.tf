@@ -92,7 +92,7 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_ap" {
 
     # "application/json" = "Action=SendMessage&MessageBody=$input.body"
 
-      "application/json" = <<EOF
+    "application/json" = <<EOF
       #set($context.requestOverride.header.X-Amz-Target = "AWSEvents.PutEvents")
       #set($context.requestOverride.header.Content-Type = "application/x-amz-json-1.1")
       {
