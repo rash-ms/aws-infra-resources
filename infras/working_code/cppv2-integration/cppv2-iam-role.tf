@@ -47,6 +47,11 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "events:PutEvents"
         ],
         Resource = "*"
+        # Resource = [
+        #   "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_us.arn}",
+        #   "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_eu.arn}",
+        #   "${aws_cloudwatch_event_bus.userplatform_cpp_event_bus_ap.arn}"
+        # ]
       },
       {
         Effect = "Allow",
@@ -72,12 +77,12 @@ resource "aws_iam_role_policy" "cpp_integration_apigw_evtbridge_firehose_logs_po
           "firehose:PutRecord",
           "firehose:PutRecordBatch"
         ],
-        # Resource = "*"
-        Resource = [
-          aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn,
-          aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn,
-          aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_ap.arn
-        ]
+        Resource = "*"
+        # Resource = [
+        #   aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_us.arn,
+        #   aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_eu.arn,
+        #   aws_kinesis_firehose_delivery_stream.userplatform_cpp_firehose_delivery_stream_ap.arn
+        # ]
       },
 
       # Firehose Access to S3
