@@ -27,7 +27,7 @@ locals {
     # ---------------- 200 (success) ----------------
     "200" = {
       selection_pattern = null
-      template = <<EOF
+      template          = <<EOF
 #set($apiReqId     = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
 #set($apiReqId     = $util.defaultIfNullOrEmpty($apiReqId, ""))
 
@@ -49,7 +49,7 @@ EOF
     # ---------------- 400 (client error) ----------------
     "400" = {
       selection_pattern = "4\\d{2}"
-      template = <<EOF
+      template          = <<EOF
 #set($apiReqId     = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
 #set($apiReqId     = $util.defaultIfNullOrEmpty($apiReqId, ""))
 
@@ -72,7 +72,7 @@ EOF
     # ---------------- 500 (server error) ----------------
     "500" = {
       selection_pattern = "5\\d{2}"
-      template = <<EOF
+      template          = <<EOF
 #set($apiReqId     = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
 #set($apiReqId     = $util.defaultIfNullOrEmpty($apiReqId, ""))
 
