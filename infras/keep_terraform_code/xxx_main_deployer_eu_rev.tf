@@ -231,24 +231,20 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_eu" {
     format = jsonencode({
       requestId          = "$context.requestId",
       sourceIp           = "$context.identity.sourceIp",
-      extendedRequestId  = "$context.extendedRequestId",
-      apiId              = "$context.apiId",
-      caller             = "$context.identity.caller",
-      user               = "$context.identity.user",
       requestTime        = "$context.requestTime",
+      requestTimeEpoch   = "$context.requestTimeEpoch",
       httpMethod         = "$context.httpMethod",
       resourcePath       = "$context.resourcePath",
       status             = "$context.status",
-      protocol           = "$context.protocol",
-      responseLength     = "$context.responseLength"
+      requestLength      = "$context.requestLength",
+      responseLength     = "$context.responseLength",
+      responseLatency    = "$context.responseLatency",
+      errorMessage       = "$context.error.message",
+      errorResponseType  = "$context.error.responseType",
       stage              = "$context.stage",
       userAgent          = "$context.identity.userAgent",
       integrationStatus  = "$context.integration.status",
-      responseLatency    = "$context.responseLatency",
       integrationLatency = "$context.integration.latency",
-      errorMessage       = "$context.error.message",
-      errorResponseType  = "$context.error.responseType",
-      requestTimeEpoch   = "$context.requestTimeEpoch"
     })
   }
   xray_tracing_enabled = true
@@ -411,23 +407,6 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_4xx_errors_eu" {
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn]
 }
 
-# Lambda errors/throttles
-resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_eu" {
-  provider            = aws.eu
-  alarm_name          = "Userplatform-CPP-Lambda-Errors-EU"
-  namespace           = "AWS/Lambda"
-  metric_name         = "Errors"
-  statistic           = "Sum"
-  period              = 300
-  evaluation_periods  = 1
-  threshold           = 0
-  comparison_operator = "GreaterThanThreshold"
-  dimensions = {
-    FunctionName = data.aws_lambda_function.cppv2_sqs_lambda_firehose_eu.function_name
-  }
-  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn]
-}
-
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_no_data_24h_eu" {
   provider    = aws.eu
   alarm_name  = "Userplatform-CPP-Firehose-No-Incoming-Data-24h-EU"
@@ -463,6 +442,23 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm_
   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn]
 }
 
+
+# Lambda errors/throttles
+resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_eu" {
+  provider            = aws.eu
+  alarm_name          = "Userplatform-CPP-Lambda-Errors-EU"
+  namespace           = "AWS/Lambda"
+  metric_name         = "Errors"
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  dimensions = {
+    FunctionName = data.aws_lambda_function.cppv2_sqs_lambda_firehose_eu.function_name
+  }
+  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn]
+}
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_put_fail_eu" {
   provider            = aws.eu
@@ -502,16 +498,16 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible_eu" {
 }
 
 # Attach the SNS notification
-# resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_eu" {
-#   provider = aws.eu
-#   bucket   = data.aws_s3_bucket.userplatform_bucket_eu.id
-#
-#   topic {
-#     topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn
-#     events        = ["s3:ObjectCreated:*"]
-#     filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
-#   }
-# }
+resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_eu" {
+  provider = aws.eu
+  bucket   = data.aws_s3_bucket.userplatform_bucket_eu.id
+
+  topic {
+    topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
+  }
+}
 
 
 ## --------------------------------------------------------------

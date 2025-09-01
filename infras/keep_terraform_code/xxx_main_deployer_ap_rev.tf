@@ -227,24 +227,20 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_ap" {
     format = jsonencode({
       requestId          = "$context.requestId",
       sourceIp           = "$context.identity.sourceIp",
-      extendedRequestId  = "$context.extendedRequestId",
-      apiId              = "$context.apiId",
-      caller             = "$context.identity.caller",
-      user               = "$context.identity.user",
       requestTime        = "$context.requestTime",
+      requestTimeEpoch   = "$context.requestTimeEpoch",
       httpMethod         = "$context.httpMethod",
       resourcePath       = "$context.resourcePath",
       status             = "$context.status",
-      protocol           = "$context.protocol",
-      responseLength     = "$context.responseLength"
+      requestLength      = "$context.requestLength",
+      responseLength     = "$context.responseLength",
+      responseLatency    = "$context.responseLatency",
+      errorMessage       = "$context.error.message",
+      errorResponseType  = "$context.error.responseType",
       stage              = "$context.stage",
       userAgent          = "$context.identity.userAgent",
       integrationStatus  = "$context.integration.status",
-      responseLatency    = "$context.responseLatency",
       integrationLatency = "$context.integration.latency",
-      errorMessage       = "$context.error.message",
-      errorResponseType  = "$context.error.responseType",
-      requestTimeEpoch   = "$context.requestTimeEpoch"
     })
   }
   xray_tracing_enabled = true
@@ -407,24 +403,6 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_4xx_errors_ap" {
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn]
 }
 
-# Lambda errors/throttles
-resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_ap" {
-  provider            = aws.ap
-  alarm_name          = "Userplatform-CPP-Lambda-Errors-AP"
-  namespace           = "AWS/Lambda"
-  metric_name         = "Errors"
-  statistic           = "Sum"
-  period              = 300
-  evaluation_periods  = 1
-  threshold           = 0
-  comparison_operator = "GreaterThanThreshold"
-  dimensions = {
-    FunctionName = data.aws_lambda_function.cppv2_sqs_lambda_firehose_ap.function_name
-  }
-  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn]
-}
-
-
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_no_data_24h_ap" {
   provider    = aws.ap
   alarm_name  = "Userplatform-CPP-Firehose-No-Incoming-Data-24h-AP"
@@ -460,6 +438,24 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm_
   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn]
 }
 
+
+
+# Lambda errors/throttles
+resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_ap" {
+  provider            = aws.ap
+  alarm_name          = "Userplatform-CPP-Lambda-Errors-AP"
+  namespace           = "AWS/Lambda"
+  metric_name         = "Errors"
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  dimensions = {
+    FunctionName = data.aws_lambda_function.cppv2_sqs_lambda_firehose_ap.function_name
+  }
+  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn]
+}
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_put_fail_ap" {
   provider            = aws.ap
@@ -498,17 +494,16 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_dlq_visible_ap" {
   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn]
 }
 
-# Attach the SNS notification
-# resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_ap" {
-#   provider = aws.ap
-#   bucket   = data.aws_s3_bucket.userplatform_bucket_ap.id
-#
-#   topic {
-#     topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
-#     events        = ["s3:ObjectCreated:*"]
-#     filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
-#   }
-# }
+resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_ap" {
+  provider = aws.ap
+  bucket   = data.aws_s3_bucket.userplatform_bucket_ap.id
+
+  topic {
+    topic_arn     = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = "raw/cppv2-raw-errors/invalid_json/"
+  }
+}
 
 
 ## --------------------------------------------------------------

@@ -318,24 +318,20 @@ resource "aws_api_gateway_stage" "userplatform_cpp_api_stage_us" {
     format = jsonencode({
       requestId          = "$context.requestId",
       sourceIp           = "$context.identity.sourceIp",
-      extendedRequestId  = "$context.extendedRequestId",
-      apiId              = "$context.apiId",
-      caller             = "$context.identity.caller",
-      user               = "$context.identity.user",
       requestTime        = "$context.requestTime",
+      requestTimeEpoch   = "$context.requestTimeEpoch",
       httpMethod         = "$context.httpMethod",
       resourcePath       = "$context.resourcePath",
       status             = "$context.status",
-      protocol           = "$context.protocol",
-      responseLength     = "$context.responseLength"
+      requestLength      = "$context.requestLength",
+      responseLength     = "$context.responseLength",
+      responseLatency    = "$context.responseLatency",
+      errorMessage       = "$context.error.message",
+      errorResponseType  = "$context.error.responseType",
       stage              = "$context.stage",
       userAgent          = "$context.identity.userAgent",
       integrationStatus  = "$context.integration.status",
-      responseLatency    = "$context.responseLatency",
       integrationLatency = "$context.integration.latency",
-      errorMessage       = "$context.error.message",
-      errorResponseType  = "$context.error.responseType",
-      requestTimeEpoch   = "$context.requestTimeEpoch"
     })
   }
   xray_tracing_enabled = true
@@ -497,24 +493,6 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_apigw_4xx_errors_us" {
   alarm_actions       = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
 
-# Lambda errors/throttles
-resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_us" {
-  provider            = aws.us
-  alarm_name          = "Userplatform-CPP-Lambda-Errors-US"
-  namespace           = "AWS/Lambda"
-  metric_name         = "Errors"
-  statistic           = "Sum"
-  period              = 300
-  evaluation_periods  = 1
-  threshold           = 0
-  comparison_operator = "GreaterThanThreshold"
-  dimensions = {
-    FunctionName = data.aws_lambda_function.cppv2_sqs_lambda_firehose_us.function_name
-  }
-  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
-}
-
-
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_no_data_24h_us" {
   provider    = aws.us
   alarm_name  = "Userplatform-CPP-Firehose-No-Incoming-Data-24h-US"
@@ -549,6 +527,25 @@ resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_failure_alarm_
   }
   alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
 }
+
+
+# Lambda errors/throttles
+resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_lambda_errors_us" {
+  provider            = aws.us
+  alarm_name          = "Userplatform-CPP-Lambda-Errors-US"
+  namespace           = "AWS/Lambda"
+  metric_name         = "Errors"
+  statistic           = "Sum"
+  period              = 300
+  evaluation_periods  = 1
+  threshold           = 0
+  comparison_operator = "GreaterThanThreshold"
+  dimensions = {
+    FunctionName = data.aws_lambda_function.cppv2_sqs_lambda_firehose_us.function_name
+  }
+  alarm_actions = [aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn]
+}
+
 
 resource "aws_cloudwatch_metric_alarm" "userplatform_cpp_firehose_put_fail" {
   provider            = aws.us
