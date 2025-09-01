@@ -23,51 +23,123 @@ locals {
 }
 
 
+# locals {
+#   sqs_integration_responses = {
+#     "200" = {
+#       selection_pattern = null # "2\\d{2}"
+#       # success → no selection_pattern
+#       template = <<EOF
+# #set($r = $util.parseJson($input.body))
+# {
+#   "status": "success",
+#   "integration_type": "SQS",
+#   "messageId": "$util.escapeJavaScript($r.SendMessageResponse.SendMessageResult.MessageId)"
+# }
+# EOF
+#     }
+#     "400" = {
+#       selection_pattern = "4\\d{2}"
+#       template          = <<EOF
+# {
+#   "status": "error",
+#   "error_type": "bad_request",
+#   "integration_type": "SQS",
+#   "details":"$util.escapeJavaScript($input.body)"
+# }
+# EOF
+#     }
+#     "500" = {
+#       selection_pattern = "5\\d{2}"
+#       template          = <<EOF
+# {
+#   "status": "error",
+#   "error_type": "internal_failure",
+#   "integration_type": "SQS",
+#   "details":"$util.escapeJavaScript($input.body)"
+# }
+# EOF
+#     }
+#   }
+# }
 
 locals {
   sqs_integration_responses = {
+    # ---------------- 200 (success) ----------------
     "200" = {
-      selection_pattern = null # "2\\d{2}"
-      # success → no selection_pattern
-      template = <<EOF
+      selection_pattern = null
+      template          = <<EOF
 #set($r = $util.parseJson($input.body))
+
+#set($apiReqId  = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
+#set($apiReqId  = $util.defaultIfNullOrEmpty($apiReqId, ""))
+
+#set($sqsReqId  = $util.defaultIfNullOrEmpty($r.SendMessageResponse.ResponseMetadata.RequestId, ""))
+#set($requestId = $util.defaultIfNullOrEmpty($sqsReqId, $apiReqId))
+
 {
   "status": "success",
   "integration_type": "SQS",
   "messageId": "$util.escapeJavaScript($r.SendMessageResponse.SendMessageResult.MessageId)",
-  "RequestId": "$util.escapeJavaScript($r.SendMessageResponse.ResponseMetadata.RequestId)",
-
+  "requestId": "$util.escapeJavaScript($requestId)",
+  "sqsRequestId": "$util.escapeJavaScript($sqsReqId)",
+  "apiGatewayRequestId": "$util.escapeJavaScript($apiReqId)"
 }
 EOF
-    }
+    },
+
+    # ---------------- 400 (client error) ----------------
     "400" = {
       selection_pattern = "4\\d{2}"
       template          = <<EOF
+#set($e = $util.parseJson($input.body))
+
+#set($apiReqId  = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
+#set($apiReqId  = $util.defaultIfNullOrEmpty($apiReqId, ""))
+
+#set($sqsReqId  = $util.defaultIfNullOrEmpty($e.RequestId, ""))
+#set($requestId = $util.defaultIfNullOrEmpty($sqsReqId, $apiReqId))
+#set($msg       = $util.defaultIfNullOrEmpty($e.Error.Message, "Unknown error"))
+
 {
   "status": "error",
   "error_type": "bad_request",
   "integration_type": "SQS",
-  "details":"$util.escapeJavaScript($r.Error.Message)",
-  "RequestId": "$util.escapeJavaScript($r.RequestId)"
+  "message": "$util.escapeJavaScript($msg)",
+  "requestId": "$util.escapeJavaScript($requestId)",
+  "sqsRequestId": "$util.escapeJavaScript($sqsReqId)",
+  "apiGatewayRequestId": "$util.escapeJavaScript($apiReqId)"
 }
 EOF
-    }
+    },
+
+    # ---------------- 500 (server error) ----------------
     "500" = {
       selection_pattern = "5\\d{2}"
       template          = <<EOF
+#set($e = $util.parseJson($input.body))
+
+#set($apiReqId  = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
+#set($apiReqId  = $util.defaultIfNullOrEmpty($apiReqId, ""))
+
+#set($sqsReqId  = $util.defaultIfNullOrEmpty($e.RequestId, ""))
+#set($requestId = $util.defaultIfNullOrEmpty($sqsReqId, $apiReqId))
+#set($msg       = $util.defaultIfNullOrEmpty($e.Error.Message, "Internal service error"))
+
 {
   "status": "error",
   "error_type": "internal_failure",
   "integration_type": "SQS",
-  "details":"$util.escapeJavaScript($r.Error.Message)",
-  "RequestId": "$util.escapeJavaScript($r.RequestId)"
+  "message": "$util.escapeJavaScript($msg)",
+  "requestId": "$util.escapeJavaScript($requestId)",
+  "sqsRequestId": "$util.escapeJavaScript($sqsReqId)",
+  "apiGatewayRequestId": "$util.escapeJavaScript($apiReqId)"
 }
 EOF
     }
   }
 }
 
-# "$util.escapeJavaScript($input.body)"
+
 
 # locals {
 #   # Shared Velocity macro
