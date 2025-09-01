@@ -512,6 +512,29 @@ resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_us" {
   name     = "userplatform_cpp_firehose_failure_alert_topic_us"
 }
 
+resource "aws_sns_topic_policy" "userplatform_cpp_firehose_failure_alert_topic_policy_us" {
+  arn = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "s3.amazonaws.com"
+        }
+        Action   = "SNS:Publish"
+        Resource = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
+        Condition = {
+          ArnLike = {
+            "aws:SourceArn" = data.aws_s3_bucket.userplatform_bucket_us.arn
+          }
+        }
+      }
+    ]
+  })
+}
+
 # resource "aws_chatbot_slack_channel_configuration" "userplatform_cpp_firehose_alerts_to_slack" {
 #   configuration_name = "userplatform_cpp_firehose_alerts_to_slack"
 #   slack_channel_id   = var.slack_channel_id

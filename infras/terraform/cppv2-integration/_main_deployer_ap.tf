@@ -500,6 +500,28 @@ resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_ap" {
   }
 }
 
+resource "aws_sns_topic_policy" "userplatform_cpp_firehose_failure_alert_topic_policy_ap" {
+  arn = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "s3.amazonaws.com"
+        }
+        Action   = "SNS:Publish"
+        Resource = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
+        Condition = {
+          ArnLike = {
+            "aws:SourceArn" = data.aws_s3_bucket.userplatform_bucket_ap.arn
+          }
+        }
+      }
+    ]
+  })
+}
 
 ## --------------------------------------------------------------
 ## ALERTING RESOURCES
