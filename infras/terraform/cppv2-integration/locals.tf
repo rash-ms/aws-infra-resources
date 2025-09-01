@@ -23,95 +23,83 @@ locals {
 }
 
 locals {
-  # Shared VTL macro (no quotes around the heredoc tag in Terraform)
-  vtl_macros = <<VTL
-## ---- Shared Macro ----
-#macro(setIds $r $mode $out)
-  #set($api = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
-  #set($api = $util.defaultIfNullOrEmpty($api, ""))
-
-  #if($mode == "success")
-    #set($sqs = $util.defaultIfNullOrEmpty($r.SendMessageResponse.ResponseMetadata.RequestId, "N/A"))
-  #else
-    #set($sqs = $util.defaultIfNullOrEmpty($r.RequestId, "N/A"))
-  #end
-
-  #set($primary = $sqs)
-  #if($primary == "N/A") #set($primary = $api) #end
-
-  #set($ignore = $out.put("sqsRequestId", $sqs))
-  #set($ignore = $out.put("requestId",   $util.defaultIfNullOrEmpty($primary, "")))
-#end
-## ---- End Macro ----
-VTL
-
   sqs_integration_responses = {
-    # ---------------- 200 ----------------
+    # ---------------- 200 (success) ----------------
     "200" = {
       selection_pattern = null
       template          = <<EOF
-${local.vtl_macros}
 #set($r = $util.parseJson($input.body))
-#set($ids = {})
-#setIds($r "success" $ids)
 
-#set($msgId = $util.defaultIfNullOrEmpty($r.SendMessageResponse.SendMessageResult.MessageId, "Unknown messageId"))
+#set($apiReqId     = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
+#set($apiReqId     = $util.defaultIfNullOrEmpty($apiReqId, ""))
+
+#set($sqsRequestId = $util.defaultIfNullOrEmpty($r.SendMessageResponse.ResponseMetadata.RequestId, ""))
+#set($requestId    = $util.defaultIfNullOrEmpty($sqsRequestId, $apiReqId))
+
+#set($messageId    = $util.defaultIfNullOrEmpty($r.SendMessageResponse.SendMessageResult.MessageId, "Unknown messageId"))
 
 {
   "status": "success",
   "integration_type": "SQS",
-  "messageId": "$util.escapeJavaScript($msgId)",
-  "requestId": "$util.escapeJavaScript($ids.requestId)",
-  "sqsRequestId": "$util.escapeJavaScript($ids.sqsRequestId)"
+  "messageId": "$util.escapeJavaScript($messageId)",
+  "requestId": "$util.escapeJavaScript($requestId)",
+  "sqsRequestId": "$util.escapeJavaScript($sqsRequestId)"
 }
 EOF
     },
 
-    # ---------------- 400 ----------------
+    # ---------------- 400 (client error) ----------------
     "400" = {
       selection_pattern = "4\\d{2}"
       template          = <<EOF
-${local.vtl_macros}
 #set($r = $util.parseJson($input.body))
-#set($ids = {})
-#setIds($r "error" $ids)
 
-#set($errMsg = $util.defaultIfNullOrEmpty($r.Error.Message, "Unknown error"))
+#set($apiReqId     = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
+#set($apiReqId     = $util.defaultIfNullOrEmpty($apiReqId, ""))
+
+#set($sqsRequestId = $util.defaultIfNullOrEmpty($r.RequestId, ""))
+#set($requestId    = $util.defaultIfNullOrEmpty($sqsRequestId, $apiReqId))
+
+#set($errMsg       = $util.defaultIfNullOrEmpty($r.Error.Message, "Unknown error"))
 
 {
   "status": "error",
   "error_type": "bad_request",
   "integration_type": "SQS",
-  "requestId": "$util.escapeJavaScript($ids.requestId)",
-  "sqsRequestId": "$util.escapeJavaScript($ids.sqsRequestId)",
+  "requestId": "$util.escapeJavaScript($requestId)",
+  "sqsRequestId": "$util.escapeJavaScript($sqsRequestId)",
   "message": "$util.escapeJavaScript($errMsg)"
 }
 EOF
     },
 
-    # ---------------- 500 ----------------
+    # ---------------- 500 (server error) ----------------
     "500" = {
       selection_pattern = "5\\d{2}"
       template          = <<EOF
-${local.vtl_macros}
 #set($r = $util.parseJson($input.body))
-#set($ids = {})
-#setIds($r "error" $ids)
 
-#set($errMsg = $util.defaultIfNullOrEmpty($r.Error.Message, "Internal service error"))
+#set($apiReqId     = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
+#set($apiReqId     = $util.defaultIfNullOrEmpty($apiReqId, ""))
+
+#set($sqsRequestId = $util.defaultIfNullOrEmpty($r.RequestId, ""))
+#set($requestId    = $util.defaultIfNullOrEmpty($sqsRequestId, $apiReqId))
+
+#set($errMsg       = $util.defaultIfNullOrEmpty($r.Error.Message, "Internal service error"))
 
 {
   "status": "error",
   "error_type": "internal_failure",
   "integration_type": "SQS",
-  "requestId": "$util.escapeJavaScript($ids.requestId)",
-  "sqsRequestId": "$util.escapeJavaScript($ids.sqsRequestId)",
+  "requestId": "$util.escapeJavaScript($requestId)",
+  "sqsRequestId": "$util.escapeJavaScript($sqsRequestId)",
   "message": "$util.escapeJavaScript($errMsg)"
 }
 EOF
     }
   }
 }
+
 
 
 

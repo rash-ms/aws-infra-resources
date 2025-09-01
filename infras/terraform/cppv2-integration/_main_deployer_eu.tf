@@ -11,10 +11,10 @@
 
 locals {
   # Increment for new changes in APIGW
-  force_apigw_eu = "eu-v0.1"
+  force_apigw_eu = "eu-v0.2"
 
   # Increment to overwrite APIGW Integration (CLI Deployment: `redeploy_trigger_v1.tf`)
-  force_apigw_cli_eu = "cli-eu-v0.1"
+  force_apigw_cli_eu = "cli-eu-v0.2"
 }
 
 
