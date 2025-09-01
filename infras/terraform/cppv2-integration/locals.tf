@@ -22,45 +22,137 @@ locals {
   }
 }
 
-
 locals {
+  # Shared VTL macro (no quotes around the heredoc tag in Terraform)
+  vtl_macros = <<VTL
+## ---- Shared Macro ----
+#macro(setIds $r $mode $out)
+  #set($api = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
+  #set($api = $util.defaultIfNullOrEmpty($api, ""))
+
+  #if($mode == "success")
+    #set($sqs = $util.defaultIfNullOrEmpty($r.SendMessageResponse.ResponseMetadata.RequestId, "N/A"))
+  #else
+    #set($sqs = $util.defaultIfNullOrEmpty($r.RequestId, "N/A"))
+  #end
+
+  #set($primary = $sqs)
+  #if($primary == "N/A") #set($primary = $api) #end
+
+  #set($ignore = $out.put("sqsRequestId", $sqs))
+  #set($ignore = $out.put("requestId",   $util.defaultIfNullOrEmpty($primary, "")))
+#end
+## ---- End Macro ----
+VTL
+
   sqs_integration_responses = {
+    # ---------------- 200 ----------------
     "200" = {
-      selection_pattern = null # "2\\d{2}"
-      # success → no selection_pattern
-      template = <<EOF
+      selection_pattern = null
+      template          = <<EOF
+${local.vtl_macros}
 #set($r = $util.parseJson($input.body))
+#set($ids = {})
+#setIds($r "success" $ids)
+
+#set($msgId = $util.defaultIfNullOrEmpty($r.SendMessageResponse.SendMessageResult.MessageId, "Unknown messageId"))
+
 {
   "status": "success",
   "integration_type": "SQS",
-  "messageId": "$util.escapeJavaScript($r.SendMessageResponse.SendMessageResult.MessageId)"
+  "messageId": "$util.escapeJavaScript($msgId)",
+  "requestId": "$util.escapeJavaScript($ids.requestId)",
+  "sqsRequestId": "$util.escapeJavaScript($ids.sqsRequestId)"
 }
 EOF
-    }
+    },
+
+    # ---------------- 400 ----------------
     "400" = {
       selection_pattern = "4\\d{2}"
       template          = <<EOF
+${local.vtl_macros}
+#set($r = $util.parseJson($input.body))
+#set($ids = {})
+#setIds($r "error" $ids)
+
+#set($errMsg = $util.defaultIfNullOrEmpty($r.Error.Message, "Unknown error"))
+
 {
   "status": "error",
   "error_type": "bad_request",
   "integration_type": "SQS",
-  "details":"$util.escapeJavaScript($input.body)"
+  "requestId": "$util.escapeJavaScript($ids.requestId)",
+  "sqsRequestId": "$util.escapeJavaScript($ids.sqsRequestId)",
+  "message": "$util.escapeJavaScript($errMsg)"
 }
 EOF
-    }
+    },
+
+    # ---------------- 500 ----------------
     "500" = {
       selection_pattern = "5\\d{2}"
       template          = <<EOF
+${local.vtl_macros}
+#set($r = $util.parseJson($input.body))
+#set($ids = {})
+#setIds($r "error" $ids)
+
+#set($errMsg = $util.defaultIfNullOrEmpty($r.Error.Message, "Internal service error"))
+
 {
   "status": "error",
   "error_type": "internal_failure",
   "integration_type": "SQS",
-  "details":"$util.escapeJavaScript($input.body)"
+  "requestId": "$util.escapeJavaScript($ids.requestId)",
+  "sqsRequestId": "$util.escapeJavaScript($ids.sqsRequestId)",
+  "message": "$util.escapeJavaScript($errMsg)"
 }
 EOF
     }
   }
 }
+
+
+
+# locals {
+#   sqs_integration_responses = {
+#     "200" = {
+#       selection_pattern = null # "2\\d{2}"
+#       # success → no selection_pattern
+#       template = <<EOF
+# #set($r = $util.parseJson($input.body))
+# {
+#   "status": "success",
+#   "integration_type": "SQS",
+#   "messageId": "$util.escapeJavaScript($r.SendMessageResponse.SendMessageResult.MessageId)"
+# }
+# EOF
+#     }
+#     "400" = {
+#       selection_pattern = "4\\d{2}"
+#       template          = <<EOF
+# {
+#   "status": "error",
+#   "error_type": "bad_request",
+#   "integration_type": "SQS",
+#   "details":"$util.escapeJavaScript($input.body)"
+# }
+# EOF
+#     }
+#     "500" = {
+#       selection_pattern = "5\\d{2}"
+#       template          = <<EOF
+# {
+#   "status": "error",
+#   "error_type": "internal_failure",
+#   "integration_type": "SQS",
+#   "details":"$util.escapeJavaScript($input.body)"
+# }
+# EOF
+#     }
+#   }
+# }
 
 
 # locals {
@@ -92,9 +184,9 @@ EOF
 # #set($r = $util.parseJson($input.body))
 # #setIds($r "success")
 #
-# #set($msgId = $r.SendMessageResponse.SendMessageResult.MessageId)
-# #if(!$msgId) #set($msgId = "Unknown messageId") #end
-#
+# set($msgId = $r.SendMessageResponse.SendMessageResult.MessageId)
+# if(!$msgId) #set($msgId = "Unknown messageId") #end
+
 # {
 #   "status": "success",
 #   "integration_type": "SQS",
