@@ -11,10 +11,10 @@
 
 locals {
   # Increment for new changes in APIGW
-  force_apigw_eu = "eu-v0.2"
+  force_apigw_eu = "eu-v0.3"
 
   # Increment to overwrite APIGW Integration (CLI Deployment: `redeploy_trigger_v1.tf`)
-  force_apigw_cli_eu = "cli-eu-v0.2"
+  force_apigw_cli_eu = "cli-eu-v0.3"
 }
 
 
@@ -39,6 +39,7 @@ data "aws_s3_bucket" "userplatform_bucket_eu" {
   bucket   = local.route_configs["eu"].bucket
 }
 
+data "aws_caller_identity" "cppv2_caller_identity_eu" {}
 
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_eu" {
   provider    = aws.eu
@@ -525,7 +526,7 @@ resource "aws_sns_topic_policy" "userplatform_cpp_firehose_failure_alert_topic_p
             "aws:SourceArn" = data.aws_s3_bucket.userplatform_bucket_eu.arn
           }
           StringEquals = {
-            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+            "aws:SourceAccount" = data.aws_caller_identity.cppv2_caller_identity_eu.account_id
           }
         }
       }

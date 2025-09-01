@@ -11,10 +11,10 @@
 
 locals {
   # Increment for new changes in APIGW
-  force_apigw_ap = "ap-v0.2"
+  force_apigw_ap = "ap-v0.3"
 
   # Increment to overwrite APIGW Integration (CLI Deployment: `redeploy_trigger_v1.tf`)
-  force_apigw_cli_ap = "cli-ap-v0.2"
+  force_apigw_cli_ap = "cli-ap-v0.3"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
@@ -37,6 +37,7 @@ data "aws_s3_bucket" "userplatform_bucket_ap" {
   bucket   = local.route_configs["ap"].bucket
 }
 
+data "aws_caller_identity" "cppv2_caller_identity_ap" {}
 
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_ap" {
   provider    = aws.ap
@@ -533,7 +534,7 @@ resource "aws_sns_topic_policy" "userplatform_cpp_firehose_failure_alert_topic_p
             "aws:SourceArn" = data.aws_s3_bucket.userplatform_bucket_ap.arn
           }
           StringEquals = {
-            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+            "aws:SourceAccount" = data.aws_caller_identity.cppv2_caller_identity_ap.account_id
           }
         }
       }

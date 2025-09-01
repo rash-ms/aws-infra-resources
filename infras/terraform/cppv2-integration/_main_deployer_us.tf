@@ -13,10 +13,10 @@
 
 locals {
   # Increment for new changes in APIGW
-  force_apigw_us = "us-v0.2"
+  force_apigw_us = "us-v0.3"
 
   # Increment to overwrite APIGW Integration (CLI Deployment: `redeploy_trigger_v1.tf`)
-  force_apigw_cli_us = "cli-us-v0.2"
+  force_apigw_cli_us = "cli-us-v0.3"
 }
 
 
@@ -34,6 +34,8 @@ data "aws_lambda_function" "cppv2_sqs_lambda_firehose_us" {
   provider      = aws.us
   function_name = "cppv2_sqs_lambda_firehose_us"
 }
+
+data "aws_caller_identity" "cppv2_caller_identity_us" {}
 
 # Reference the existing bucket
 data "aws_s3_bucket" "userplatform_bucket_us" {
@@ -513,10 +515,6 @@ resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_us" {
   name     = "userplatform_cpp_firehose_failure_alert_topic_us"
 }
 
-
-data "aws_caller_identity" "current" {}
-
-
 resource "aws_sns_topic_policy" "userplatform_cpp_firehose_failure_alert_topic_policy_us" {
   provider = aws.us
   arn      = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
@@ -536,7 +534,7 @@ resource "aws_sns_topic_policy" "userplatform_cpp_firehose_failure_alert_topic_p
             "aws:SourceArn" = data.aws_s3_bucket.userplatform_bucket_us.arn
           }
           StringEquals = {
-            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+            "aws:SourceAccount" = data.aws_caller_identity.cppv2_caller_identity_us.account_id
           }
         }
       }
