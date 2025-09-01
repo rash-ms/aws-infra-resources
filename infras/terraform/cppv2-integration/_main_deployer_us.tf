@@ -37,7 +37,8 @@ data "aws_lambda_function" "cppv2_sqs_lambda_firehose_us" {
 
 # Reference the existing bucket
 data "aws_s3_bucket" "userplatform_bucket_us" {
-  bucket = local.route_configs["us"].bucket
+  provider = aws.us
+  bucket   = local.route_configs["us"].bucket
 }
 
 resource "aws_api_gateway_rest_api" "userplatform_cpp_rest_api_us" {

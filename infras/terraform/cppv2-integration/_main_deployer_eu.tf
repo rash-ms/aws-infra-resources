@@ -35,7 +35,8 @@ data "aws_lambda_function" "cppv2_sqs_lambda_firehose_eu" {
 
 
 data "aws_s3_bucket" "userplatform_bucket_eu" {
-  bucket = local.route_configs["eu"].bucket
+  provider = aws.eu
+  bucket   = local.route_configs["eu"].bucket
 }
 
 

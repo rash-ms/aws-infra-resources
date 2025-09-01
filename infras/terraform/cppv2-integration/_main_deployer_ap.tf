@@ -33,7 +33,8 @@ data "aws_lambda_function" "cppv2_sqs_lambda_firehose_ap" {
 }
 
 data "aws_s3_bucket" "userplatform_bucket_ap" {
-  bucket = local.route_configs["ap"].bucket
+  provider = aws.ap
+  bucket   = local.route_configs["ap"].bucket
 }
 
 
