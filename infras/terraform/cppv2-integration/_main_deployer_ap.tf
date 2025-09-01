@@ -11,10 +11,10 @@
 
 locals {
   # Increment for new changes in APIGW
-  force_apigw_ap = "ap-v0.3"
+  force_apigw_ap = "ap-v0.1"
 
   # Increment to overwrite APIGW Integration (CLI Deployment: `redeploy_trigger_v1.tf`)
-  force_apigw_cli_ap = "cli-ap-v0.3"
+  force_apigw_cli_ap = "cli-ap-v0.1"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
