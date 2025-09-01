@@ -27,16 +27,14 @@ locals {
     # ---------------- 200 (success) ----------------
     "200" = {
       selection_pattern = null
-      template          = <<EOF
-#set($r = $util.parseJson($input.body))
-
+      template = <<EOF
 #set($apiReqId     = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
 #set($apiReqId     = $util.defaultIfNullOrEmpty($apiReqId, ""))
 
-#set($sqsRequestId = $util.defaultIfNullOrEmpty($r.SendMessageResponse.ResponseMetadata.RequestId, ""))
+#set($sqsRequestId = $util.defaultIfNullOrEmpty($input.path('$.SendMessageResponse.ResponseMetadata.RequestId'), ""))
 #set($requestId    = $util.defaultIfNullOrEmpty($sqsRequestId, $apiReqId))
 
-#set($messageId    = $util.defaultIfNullOrEmpty($r.SendMessageResponse.SendMessageResult.MessageId, "Unknown messageId"))
+#set($messageId    = $util.defaultIfNullOrEmpty($input.path('$.SendMessageResponse.SendMessageResult.MessageId'), "Unknown messageId"))
 
 {
   "status": "success",
@@ -51,16 +49,14 @@ EOF
     # ---------------- 400 (client error) ----------------
     "400" = {
       selection_pattern = "4\\d{2}"
-      template          = <<EOF
-#set($r = $util.parseJson($input.body))
-
+      template = <<EOF
 #set($apiReqId     = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
 #set($apiReqId     = $util.defaultIfNullOrEmpty($apiReqId, ""))
 
-#set($sqsRequestId = $util.defaultIfNullOrEmpty($r.RequestId, ""))
+#set($sqsRequestId = $util.defaultIfNullOrEmpty($input.path('$.RequestId'), ""))
 #set($requestId    = $util.defaultIfNullOrEmpty($sqsRequestId, $apiReqId))
 
-#set($errMsg       = $util.defaultIfNullOrEmpty($r.Error.Message, "Unknown error"))
+#set($message      = $util.defaultIfNullOrEmpty($input.path('$.Error.Message'), "Unknown error"))
 
 {
   "status": "error",
@@ -68,7 +64,7 @@ EOF
   "integration_type": "SQS",
   "requestId": "$util.escapeJavaScript($requestId)",
   "sqsRequestId": "$util.escapeJavaScript($sqsRequestId)",
-  "message": "$util.escapeJavaScript($errMsg)"
+  "message": "$util.escapeJavaScript($message)"
 }
 EOF
     },
@@ -76,16 +72,14 @@ EOF
     # ---------------- 500 (server error) ----------------
     "500" = {
       selection_pattern = "5\\d{2}"
-      template          = <<EOF
-#set($r = $util.parseJson($input.body))
-
+      template = <<EOF
 #set($apiReqId     = $util.defaultIfNullOrEmpty($context.requestId, $context.extendedRequestId))
 #set($apiReqId     = $util.defaultIfNullOrEmpty($apiReqId, ""))
 
-#set($sqsRequestId = $util.defaultIfNullOrEmpty($r.RequestId, ""))
+#set($sqsRequestId = $util.defaultIfNullOrEmpty($input.path('$.RequestId'), ""))
 #set($requestId    = $util.defaultIfNullOrEmpty($sqsRequestId, $apiReqId))
 
-#set($errMsg       = $util.defaultIfNullOrEmpty($r.Error.Message, "Internal service error"))
+#set($message      = $util.defaultIfNullOrEmpty($input.path('$.Error.Message'), "Internal service error"))
 
 {
   "status": "error",
@@ -93,12 +87,13 @@ EOF
   "integration_type": "SQS",
   "requestId": "$util.escapeJavaScript($requestId)",
   "sqsRequestId": "$util.escapeJavaScript($sqsRequestId)",
-  "message": "$util.escapeJavaScript($errMsg)"
+  "message": "$util.escapeJavaScript($message)"
 }
 EOF
     }
   }
 }
+
 
 
 
