@@ -11,10 +11,10 @@
 
 locals {
   # Increment for new changes in APIGW
-  force_apigw_ap = "ap-v0.1"
+  force_apigw_ap = "ap-v0.2"
 
   # Increment to overwrite APIGW Integration (CLI Deployment: `redeploy_trigger_v1.tf`)
-  force_apigw_cli_ap = "cli-ap-v0.1"
+  force_apigw_cli_ap = "cli-ap-v0.2"
 }
 
 data "aws_sqs_queue" "userplatform_cppv2_sqs_ap" {
@@ -502,7 +502,8 @@ resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_ap" {
 }
 
 resource "aws_sns_topic_policy" "userplatform_cpp_firehose_failure_alert_topic_policy_ap" {
-  arn = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
+  provider = aws.ap
+  arn      = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
 
   policy = jsonencode({
     Version = "2012-10-17"

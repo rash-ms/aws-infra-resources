@@ -11,10 +11,10 @@
 
 locals {
   # Increment for new changes in APIGW
-  force_apigw_eu = "eu-v0.1"
+  force_apigw_eu = "eu-v0.2"
 
   # Increment to overwrite APIGW Integration (CLI Deployment: `redeploy_trigger_v1.tf`)
-  force_apigw_cli_eu = "cli-eu-v0.1"
+  force_apigw_cli_eu = "cli-eu-v0.2"
 }
 
 
@@ -495,7 +495,8 @@ resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_eu" {
 
 
 resource "aws_sns_topic_policy" "userplatform_cpp_firehose_failure_alert_topic_policy_eu" {
-  arn = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn
+  provider = aws.eu
+  arn      = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_eu.arn
 
   policy = jsonencode({
     Version = "2012-10-17"
