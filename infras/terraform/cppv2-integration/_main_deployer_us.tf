@@ -513,6 +513,10 @@ resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_us" {
   name     = "userplatform_cpp_firehose_failure_alert_topic_us"
 }
 
+
+data "aws_caller_identity" "current" {}
+
+
 resource "aws_sns_topic_policy" "userplatform_cpp_firehose_failure_alert_topic_policy_us" {
   provider = aws.us
   arn      = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_us.arn
@@ -530,6 +534,9 @@ resource "aws_sns_topic_policy" "userplatform_cpp_firehose_failure_alert_topic_p
         Condition = {
           ArnLike = {
             "aws:SourceArn" = data.aws_s3_bucket.userplatform_bucket_us.arn
+          }
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
           }
         }
       }

@@ -501,6 +501,19 @@ resource "aws_s3_bucket_notification" "userplatform_cpp_bkt_notification_ap" {
   }
 }
 
+## --------------------------------------------------------------
+## ALERTING RESOURCES
+## --------------------------------------------------------------
+## This section provisions Alerting components such as:
+## - SNS topics + Add to'aws_chatbot_slack_channel_configuration'
+##   in `main_us_deployer`
+## --------------------------------------------------------------
+
+resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_ap" {
+  provider = aws.ap
+  name     = "userplatform_cpp_firehose_failure_alert_topic_ap"
+}
+
 resource "aws_sns_topic_policy" "userplatform_cpp_firehose_failure_alert_topic_policy_ap" {
   provider = aws.ap
   arn      = aws_sns_topic.userplatform_cpp_firehose_failure_alert_topic_ap.arn
@@ -519,21 +532,11 @@ resource "aws_sns_topic_policy" "userplatform_cpp_firehose_failure_alert_topic_p
           ArnLike = {
             "aws:SourceArn" = data.aws_s3_bucket.userplatform_bucket_ap.arn
           }
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
         }
       }
     ]
   })
-}
-
-## --------------------------------------------------------------
-## ALERTING RESOURCES
-## --------------------------------------------------------------
-## This section provisions Alerting components such as:
-## - SNS topics + Add to'aws_chatbot_slack_channel_configuration'
-##   in `main_us_deployer`
-## --------------------------------------------------------------
-
-resource "aws_sns_topic" "userplatform_cpp_firehose_failure_alert_topic_ap" {
-  provider = aws.ap
-  name     = "userplatform_cpp_firehose_failure_alert_topic_ap"
 }
