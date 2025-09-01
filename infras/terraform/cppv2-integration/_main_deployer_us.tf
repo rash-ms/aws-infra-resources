@@ -13,7 +13,7 @@
 
 locals {
   # Increment for new changes in APIGW
-  force_apigw_us = "us-v0.3"
+  force_apigw_us = "us-v0.4"
 
   # Increment to overwrite APIGW Integration (CLI Deployment: `redeploy_trigger_v1.tf`)
   force_apigw_cli_us = "cli-us-v0.3"
