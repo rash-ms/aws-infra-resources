@@ -13,9 +13,9 @@ body:
         - label: mod_a
         - label: mod_b
         - label: mod_c
-    # To pre-check some options, add `default: true` to the specific option(s) above.
-    # e.g.  - label: mod_a
-    #         default: true
+        # To pre-check options, add `default: true` under the option itself.
+        # e.g. - label: mod_a
+        #         default: true
 
   - type: dropdown
     id: env
@@ -24,7 +24,7 @@ body:
       options:
         - dev
         - prod
-    default: 0   # 0 = dev, 1 = prod   <-- must be an integer
+      default: 0   # 👈 must live inside attributes, integer index (0=dev, 1=prod)
 
   - type: textarea
     id: notes
