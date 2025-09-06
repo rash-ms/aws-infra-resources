@@ -1,0 +1,30 @@
+name: Deploy Terraform
+description: Pick which Terraform modules to deploy
+title: "Deploy: <env>"
+labels: [deploy-request]
+
+body:
+  - type: checkboxes
+    id: modules
+    attributes:
+      label: Select modules
+      description: Choose one or more modules to deploy
+      options:
+        - label: mod_a
+        - label: mod_b
+        - label: mod_c
+
+  - type: dropdown
+    id: env
+    attributes:
+      label: Target environment
+      options:
+        - dev
+        - prod
+      default: dev
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes (optional)
+      description: Any extra context for this deployment
