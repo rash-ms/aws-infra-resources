@@ -607,9 +607,11 @@ data "aws_s3_bucket_objects" "zips_us" {
 }
 
 locals {
-  key    = [for k in data.aws_s3_bucket_objects.zips_us.keys : k if endswith(k, ".zip")][0]
+  key    = [for k in data.aws_s3_bucket_objects.zips_us.keys : k if trimsuffix(k, ".zip") != k][0]
   module = trimsuffix(basename(local.key), ".zip")
 }
+
+
 
 resource "aws_lambda_function" "cpv2_sqs_lambda_firehose_us" {
   provider      = aws.us
