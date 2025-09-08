@@ -85,7 +85,7 @@ resource "aws_api_gateway_integration" "userplatform_cpp_api_integration_us" {
   # passthrough_behavior = "WHEN_NO_TEMPLATES"
 
   ## SQS INTEGRATION
-  uri                  = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${data.aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
+  uri                  = "arn:aws:apigateway:${local.route_configs["us"].region}:sqs:path/${var.account_id}/${aws_sqs_queue.userplatform_cppv2_sqs_us.name}"
   credentials          = aws_iam_role.cpp_integration_apigw_evtbridge_firehose_logs_role.arn
   passthrough_behavior = "NEVER"
 
